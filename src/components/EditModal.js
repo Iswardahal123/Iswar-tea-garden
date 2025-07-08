@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./EditModal.css"; // We'll create this CSS file
+import "./EditModal.css";
 
 function EditModal({ entry, onSave, onClose }) {
   const [formData, setFormData] = useState({});
@@ -9,12 +9,15 @@ function EditModal({ entry, onSave, onClose }) {
   }, [entry]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   const handleSubmit = () => {
-    if (!formData) return;
-    onSave(formData);
+    if (!formData || !formData.id) return;
+    onSave(formData); // passes updated formData back to parent
   };
 
   if (!entry) return null;
@@ -24,34 +27,33 @@ function EditModal({ entry, onSave, onClose }) {
       <div className="modal-container">
         <h2>Edit Entry</h2>
         <div className="modal-fields">
-          <label>
-            Date:
-            <input
-              type="text"
-              name="date"
-              value={formData.date || ""}
-              onChange={handleChange}
-            />
+          <label>Date:
+            <input name="date" value={formData.date || ""} onChange={handleChange} />
           </label>
-          <label>
-            Weight:
-            <input
-              type="text"
-              name="weight"
-              value={formData.weight || ""}
-              onChange={handleChange}
-            />
+          <label>Day:
+            <input name="day" value={formData.day || ""} onChange={handleChange} />
           </label>
-          <label>
-            Status:
-            <input
-              type="text"
-              name="paidStatus"
-              value={formData.paidStatus || ""}
-              onChange={handleChange}
-            />
+          <label>Weight:
+            <input name="weight" value={formData.weight || ""} onChange={handleChange} />
           </label>
-          {/* Add more fields as needed */}
+          <label>Rate:
+            <input name="rate" value={formData.rate || ""} onChange={handleChange} />
+          </label>
+          <label>Total:
+            <input name="total" value={formData.total || ""} onChange={handleChange} />
+          </label>
+          <label>Paid Amount:
+            <input name="paidAmount" value={formData.paidAmount || ""} onChange={handleChange} />
+          </label>
+          <label>Advance Cut:
+            <input name="advanceCut" value={formData.advanceCut || ""} onChange={handleChange} />
+          </label>
+          <label>Due:
+            <input name="due" value={formData.due || ""} onChange={handleChange} />
+          </label>
+          <label>Status:
+            <input name="paidStatus" value={formData.paidStatus || ""} onChange={handleChange} />
+          </label>
         </div>
         <div className="modal-buttons">
           <button onClick={handleSubmit} className="save-btn">Save</button>

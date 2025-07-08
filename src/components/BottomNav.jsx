@@ -44,10 +44,10 @@ const BottomNav = () => {
         label="Add Entry"
         icon={<AddCircleOutlineIcon />}
         sx={{
+          flex: 1,
           color: value === 0 ? "#2e7d32" : "inherit",
           "&:hover": {
-            color: "#2e7d32",
-            backgroundColor: "rgba(76, 175, 80, 0.1)",
+            backgroundColor: "rgba(76, 175, 80, 0.12)",
           },
         }}
       />
@@ -55,10 +55,10 @@ const BottomNav = () => {
         label="View Entries"
         icon={<ListAltIcon />}
         sx={{
+          flex: 1,
           color: value === 1 ? "#1565c0" : "inherit",
           "&:hover": {
-            color: "#1565c0",
-            backgroundColor: "rgba(33, 150, 243, 0.1)",
+            backgroundColor: "rgba(33, 150, 243, 0.12)",
           },
         }}
       />

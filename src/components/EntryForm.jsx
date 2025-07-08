@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db, auth } from '../firebase/config'; // Add auth import
 
 const EntryForm = () => {
   const [date, setDate] = useState('');
@@ -14,12 +14,19 @@ const EntryForm = () => {
       return;
     }
 
+    const user = auth.currentUser; // 👈 Get logged-in user
+    if (!user) {
+      alert("User not logged in");
+      return;
+    }
+
     setLoading(true);
     try {
       await addDoc(collection(db, 'pattaEntries'), {
         date,
         weight: parseFloat(weight),
-        createdAt: Timestamp.now()
+        createdAt: Timestamp.now(),
+        userId: user.uid // 👈 Save user's ID
       });
       alert('✅ Data saved successfully!');
       setDate('');

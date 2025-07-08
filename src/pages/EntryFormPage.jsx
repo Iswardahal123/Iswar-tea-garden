@@ -5,6 +5,7 @@ const EntryFormPage = () => {
   return (
     <div>
       
+      
       <EntryForm />
     </div>
   );

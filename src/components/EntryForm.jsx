@@ -48,11 +48,11 @@ const EntryForm = () => {
         createdAt: Timestamp.now(),
         userId: user.uid
       });
-      alert('âœ… Data saved!');
+      alert('✅ Data saved!');
       setDate('');
       setWeight('');
     } catch (err) {
-      console.error('âŒ Error:', err);
+      console.error('❌ Error:', err);
       alert('Error saving data.');
     } finally {
       setLoading(false);
@@ -61,7 +61,7 @@ const EntryForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3>ðŸŒ¿ Add New Entry</h3>
+      <h3>🌿 Add New Entry</h3>
       <input
         type="date"
         value={date}

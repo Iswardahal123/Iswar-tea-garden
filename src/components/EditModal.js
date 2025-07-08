@@ -1,3 +1,5 @@
+// File: src/components/EditModal.jsx
+
 import React, { useEffect, useState } from "react";
 import "./EditModal.css";
 
@@ -45,12 +47,24 @@ function EditModal({ entry, onSave, onClose }) {
             {["date", "day", "weight", "rate", "total", "paidAmount", "advanceCut", "due", "paidStatus"].map((field) => (
               <label key={field}>
                 {field.charAt(0).toUpperCase() + field.slice(1)}:
-                <input
-                  name={field}
-                  value={formData[field] || ""}
-                  onChange={handleChange}
-                  disabled={field === "total" || field === "due"} // readonly for calculated fields
-                />
+                {field === "paidStatus" ? (
+                  <select
+                    name={field}
+                    value={formData[field] || ""}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select status</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                ) : (
+                  <input
+                    name={field}
+                    value={formData[field] || ""}
+                    onChange={handleChange}
+                    disabled={field === "total" || field === "due"} // readonly for calculated fields
+                  />
+                )}
               </label>
             ))}
           </div>

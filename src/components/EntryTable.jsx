@@ -19,12 +19,17 @@ function EntryTable() {
     if (!user) return;
 
     const q = query(
-      collection(db, "entries"), // ✅ Correct collection name
+      collection(db, "entries"),
       where("userId", "==", user.uid)
     );
 
     const snapshot = await getDocs(q);
-    setEntries(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+
+    const sortedEntries = snapshot.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds); // 🔁 Latest first
+
+    setEntries(sortedEntries);
   };
 
   useEffect(() => {
@@ -39,10 +44,10 @@ function EntryTable() {
     if (!updatedData || !updatedData.id) return;
 
     try {
-      const entryRef = doc(db, "entries", updatedData.id); // ✅ Correct update path
+      const entryRef = doc(db, "entries", updatedData.id);
       await updateDoc(entryRef, updatedData);
       setSelectedEntry(null);
-      fetchEntries();
+      fetchEntries(); // 🔁 Refresh table after saving
     } catch (err) {
       console.error("❌ Error saving entry:", err);
     }
@@ -93,6 +98,7 @@ function EntryTable() {
         </tbody>
       </table>
 
+      {/* 🛠 Edit Modal */}
       <EditModal
         entry={selectedEntry}
         onSave={handleSave}

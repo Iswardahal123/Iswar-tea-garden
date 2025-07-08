@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase/config";
+import { collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
+import { db, auth } from "../firebase/config"; // ✅ auth import added
 import EditModal from "./EditModal";
 
 function EntryTable() {
@@ -8,7 +8,15 @@ function EntryTable() {
   const [selectedEntry, setSelectedEntry] = useState(null);
 
   const fetchEntries = async () => {
-    const snapshot = await getDocs(collection(db, "entries"));
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const q = query(
+      collection(db, "pattaEntries"), // ✅ Make sure your Firestore collection name is correct
+      where("userId", "==", user.uid)
+    );
+
+    const snapshot = await getDocs(q);
     setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
@@ -22,7 +30,7 @@ function EntryTable() {
 
   const handleSave = async (updatedData) => {
     if (!selectedEntry) return;
-    const entryRef = doc(db, "entries", selectedEntry.id);
+    const entryRef = doc(db, "pattaEntries", selectedEntry.id);
     await updateDoc(entryRef, updatedData);
     setSelectedEntry(null);
     fetchEntries();

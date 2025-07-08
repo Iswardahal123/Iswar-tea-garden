@@ -71,7 +71,21 @@ function EntryTable() {
               <tr>
                 <td>{entry.date}</td>
                 <td>{entry.weight}</td>
-                <td>{entry.paidStatus || "-"}</td>
+                <td>
+  <span
+    style={{
+      padding: "4px 10px",
+      borderRadius: "20px",
+      color: entry.paidStatus === "paid" ? "#2e7d32" : "#c62828",
+      backgroundColor: entry.paidStatus === "paid" ? "#c8e6c9" : "#ffcdd2",
+      fontWeight: "bold",
+      fontSize: "13px",
+      textTransform: "capitalize",
+    }}
+  >
+    {entry.paidStatus || "-"}
+  </span>
+</td>
                 <td>
                   <button onClick={() => handleEditClick(entry)}>
                     {selectedEntry?.id === entry.id ? "Hide" : "Edit"}

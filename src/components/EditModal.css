@@ -2,46 +2,54 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
 }
 
 .modal-container {
   background: white;
-  padding: 25px;
+  padding: 20px;
   border-radius: 10px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  width: 95%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .modal-container h2 {
   margin-bottom: 15px;
+  font-size: 1.2rem;
+  text-align: center;
 }
 
 .modal-fields label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .modal-fields input {
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
+  padding: 10px;
+  margin-top: 6px;
+  font-size: 1rem;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 6px;
+  box-sizing: border-box;
 }
 
 .modal-buttons {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
 }
 
@@ -49,16 +57,20 @@
   background-color: #4caf50;
   color: white;
   border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  flex: 1;
   cursor: pointer;
+  font-size: 1rem;
 }
 
 .cancel-btn {
   background-color: #f44336;
   color: white;
   border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  flex: 1;
   cursor: pointer;
+  font-size: 1rem;
 }

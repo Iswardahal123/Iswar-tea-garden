@@ -15,6 +15,14 @@ const EntryForm = () => {
     return dateObj.toLocaleDateString('en-US', { weekday: 'long' });
   };
 
+  const weightNum = parseFloat(weight || 0);
+  const rateNum = parseFloat(rate || 0);
+  const paidAmountNum = parseFloat(paidAmount || 0);
+  const advanceCutNum = parseFloat(advanceCut || 0);
+
+  const total = (weightNum * rateNum).toFixed(2);
+  const due = (total - paidAmountNum - advanceCutNum).toFixed(2);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!date || !weight || !rate) {
@@ -28,13 +36,6 @@ const EntryForm = () => {
       return;
     }
 
-    const weightNum = parseFloat(weight);
-    const rateNum = parseFloat(rate);
-    const paidAmountNum = parseFloat(paidAmount || 0);
-    const advanceCutNum = parseFloat(advanceCut || 0);
-
-    const total = weightNum * rateNum;
-    const due = total - paidAmountNum - advanceCutNum;
     const day = getDayName(date);
 
     setLoading(true);
@@ -46,8 +47,8 @@ const EntryForm = () => {
         rate: rateNum,
         paidAmount: paidAmountNum,
         advanceCut: advanceCutNum,
-        total,
-        due,
+        total: parseFloat(total),
+        due: parseFloat(due),
         paidStatus: "unpaid",
         createdAt: Timestamp.now(),
         userId: user.uid
@@ -66,10 +67,6 @@ const EntryForm = () => {
     }
   };
 
-  // Auto-calculated total & due
-  const total = (parseFloat(weight || 0) * parseFloat(rate || 0)).toFixed(2);
-  const due = (total - parseFloat(paidAmount || 0) - parseFloat(advanceCut || 0)).toFixed(2);
-
   return (
     <form onSubmit={handleSubmit}>
       <h3>🌿 Add New Entry</h3>
@@ -80,6 +77,7 @@ const EntryForm = () => {
         onChange={(e) => setDate(e.target.value)}
         required
       />
+
       <input
         type="number"
         placeholder="Weight (kg)"
@@ -87,6 +85,7 @@ const EntryForm = () => {
         onChange={(e) => setWeight(e.target.value)}
         required
       />
+
       <input
         type="number"
         placeholder="Rate (₹)"
@@ -94,12 +93,14 @@ const EntryForm = () => {
         onChange={(e) => setRate(e.target.value)}
         required
       />
+
       <input
         type="number"
         placeholder="Paid Amount (₹)"
         value={paidAmount}
         onChange={(e) => setPaidAmount(e.target.value)}
       />
+
       <input
         type="number"
         placeholder="Advance Cut (₹)"
@@ -107,10 +108,19 @@ const EntryForm = () => {
         onChange={(e) => setAdvanceCut(e.target.value)}
       />
 
-      <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-        <strong>💰 Total:</strong> ₹{total} <br />
-        <strong>🧾 Due:</strong> ₹{due}
-      </div>
+      <input
+        type="number"
+        placeholder="Amount (₹)"
+        value={total}
+        readOnly
+      />
+
+      <input
+        type="number"
+        placeholder="Due (₹)"
+        value={due}
+        readOnly
+      />
 
       <button type="submit" disabled={loading}>
         {loading ? 'Saving...' : 'Add Entry'}

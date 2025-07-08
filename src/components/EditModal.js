@@ -1,122 +1,71 @@
-import React, { useEffect, useState } from "react";
-import {
-  collection,
-  getDocs,
-  doc,
-  updateDoc,
-  query,
-  where,
-} from "firebase/firestore";
-import { db, auth } from "../firebase/config";
-import EditModal from "./EditModal";
+import React, { useState, useEffect } from "react";
+import "./EditModal.css";
 
-function EntryTable() {
-  const [entries, setEntries] = useState([]);
-  const [selectedEntry, setSelectedEntry] = useState(null);
-
-  const fetchEntries = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const q = query(
-      collection(db, "entries"), // ✅ Correct Firestore collection
-      where("userId", "==", user.uid)
-    );
-
-    const snapshot = await getDocs(q);
-    setEntries(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-  };
+function EditModal({ entry, onSave, onClose }) {
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    fetchEntries();
-  }, []);
+    if (entry) setFormData(entry);
+  }, [entry]);
 
-  const handleEditClick = (entry) => {
-    setSelectedEntry(entry);
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  const handleSave = async (updatedData) => {
-    if (!updatedData || !updatedData.id) return;
-
-    try {
-      const entryRef = doc(db, "entries", updatedData.id); // ✅ Update in same collection
-      await updateDoc(entryRef, updatedData);
-      setSelectedEntry(null);
-      fetchEntries();
-    } catch (err) {
-      console.error("❌ Error saving entry:", err);
-    }
+  const handleSubmit = () => {
+    if (!formData || !formData.id) return;
+    onSave(formData);
   };
+
+  if (!entry) return null;
 
   return (
-    <div style={{ marginTop: "30px", padding: "10px" }}>
-      <div style={{ overflowX: "auto" }}>
-        <table
-          border="1"
-          cellPadding="8"
-          style={{
-            width: "100%",
-            minWidth: "700px",
-            borderCollapse: "collapse",
-            fontSize: "14px",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Weight</th>
-              <th>Status</th>
-              <th>Edit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((entry) => (
-              <React.Fragment key={entry.id}>
-                <tr>
-                  <td>{entry.date}</td>
-                  <td>{entry.weight}</td>
-                  <td>{entry.paidStatus || "-"}</td>
-                  <td>
-                    <button onClick={() => handleEditClick(entry)}>
-                      {selectedEntry?.id === entry.id ? "Hide" : "Edit"}
-                    </button>
-                  </td>
-                </tr>
+    <div className="modal-overlay">
+      <div className="modal-container">
+        <div className="modal-header">Edit Entry</div>
 
-                {selectedEntry?.id === entry.id && (
-                  <tr style={{ backgroundColor: "#fdf6e3" }}>
-                    <td colSpan="4">
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "12px",
-                          fontSize: "13px",
-                        }}
-                      >
-                        <div><strong>Day:</strong> {entry.day || "-"}</div>
-                        <div><strong>Rate:</strong> {entry.rate || "-"}</div>
-                        <div><strong>Total:</strong> {entry.total || "-"}</div>
-                        <div><strong>Paid:</strong> {entry.paidAmount || "-"}</div>
-                        <div><strong>Advance Cut:</strong> {entry.advanceCut || "-"}</div>
-                        <div><strong>Due:</strong> {entry.due || "-"}</div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+        <div className="modal-body">
+          <div className="modal-fields">
+            <label>Date:
+              <input name="date" value={formData.date || ""} onChange={handleChange} />
+            </label>
+            <label>Day:
+              <input name="day" value={formData.day || ""} onChange={handleChange} />
+            </label>
+            <label>Weight:
+              <input name="weight" value={formData.weight || ""} onChange={handleChange} />
+            </label>
+            <label>Rate:
+              <input name="rate" value={formData.rate || ""} onChange={handleChange} />
+            </label>
+            <label>Total:
+              <input name="total" value={formData.total || ""} onChange={handleChange} />
+            </label>
+            <label>Paid Amount:
+              <input name="paidAmount" value={formData.paidAmount || ""} onChange={handleChange} />
+            </label>
+            <label>Advance Cut:
+              <input name="advanceCut" value={formData.advanceCut || ""} onChange={handleChange} />
+            </label>
+            <label>Due:
+              <input name="due" value={formData.due || ""} onChange={handleChange} />
+            </label>
+            <label>Status:
+              <input name="paidStatus" value={formData.paidStatus || ""} onChange={handleChange} />
+            </label>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="save-btn" onClick={handleSubmit}>Save</button>
+          <button className="cancel-btn" onClick={onClose}>Cancel</button>
+        </div>
       </div>
-
-      <EditModal
-        entry={selectedEntry}
-        onSave={handleSave}
-        onClose={() => setSelectedEntry(null)}
-      />
     </div>
   );
 }
 
-export default EntryTable;
+export default EditModal;

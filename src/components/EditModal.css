@@ -84,3 +84,25 @@
 .cancel-btn {
   background-color: #f44336;
 }
+/* 🔽 PaidStatus Select Styling */
+.modal-fields select[name="paidStatus"] {
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+/* 🟢 Paid */
+.modal-fields select[name="paidStatus"].paid {
+  color: green;
+  border-color: green;
+}
+
+/* 🔴 Unpaid */
+.modal-fields select[name="paidStatus"].unpaid {
+  color: red;
+  border-color: red;
+}

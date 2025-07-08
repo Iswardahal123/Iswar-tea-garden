@@ -1,3 +1,4 @@
+import "./EntryTable.css";
 import React, { useEffect, useState } from "react";
 import {
   collection,

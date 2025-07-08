@@ -9,10 +9,23 @@ function EditModal({ entry, onSave, onClose }) {
   }, [entry]);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // 🧮 Auto calculate total
+      const weightNum = parseFloat(updated.weight) || 0;
+      const rateNum = parseFloat(updated.rate) || 0;
+      updated.total = weightNum * rateNum;
+
+      // 💰 Auto calculate due
+      const paid = parseFloat(updated.paidAmount) || 0;
+      const cut = parseFloat(updated.advanceCut) || 0;
+      updated.due = updated.total - paid - cut;
+
+      return updated;
+    });
   };
 
   const handleSubmit = () => {
@@ -36,6 +49,7 @@ function EditModal({ entry, onSave, onClose }) {
                   name={field}
                   value={formData[field] || ""}
                   onChange={handleChange}
+                  disabled={field === "total" || field === "due"} // readonly for calculated fields
                 />
               </label>
             ))}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import RestoreIcon from "@mui/icons-material/Restore";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { useNavigate, useLocation } from "react-router-dom";
 
 const BottomNav = () => {
@@ -37,8 +37,8 @@ const BottomNav = () => {
         backgroundColor: "#fff",
       }}
     >
-      <BottomNavigationAction label="Add Entry" icon={<RestoreIcon />} />
-      <BottomNavigationAction label="View Entries" icon={<FavoriteIcon />} />
+      <BottomNavigationAction label="Add Entry" icon={<AddCircleOutlineIcon />} />
+      <BottomNavigationAction label="View Entries" icon={<ListAltIcon />} />
     </BottomNavigation>
   );
 };

@@ -12,7 +12,7 @@ function EntryTable() {
     if (!user) return;
 
     const q = query(
-      collection(db, "pattaEntries"), // ✅ Make sure your Firestore collection name is correct
+      collection(db, "entries"), // ✅ Make sure your Firestore collection name is correct
       where("userId", "==", user.uid)
     );
 

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/Login";
 import { auth } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 
 // ✅ Components
 import TopBar from "./components/TopBar";
-import BottomNavBar from "./components/BottomNav";
+import BottomNav from "./components/BottomNav"; // ✅ Corrected import
 
 // ✅ Pages
 import EntryFormPage from "./pages/EntryFormPage";

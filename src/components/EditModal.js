@@ -9,9 +9,9 @@ function EditModal({ entry, onSave, onClose }) {
   }, [entry]);
 
   const handleChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 

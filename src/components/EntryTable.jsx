@@ -74,11 +74,15 @@ function EntryTable() {
                 <td>
   <span
     style={{
-      padding: "4px 10px",
-      borderRadius: "20px",
-      color: entry.paidStatus === "paid" ? "#2e7d32" : "#c62828",
-      backgroundColor: entry.paidStatus === "paid" ? "#c8e6c9" : "#ffcdd2",
-      fontWeight: "bold",
+      display: "inline-block",
+      padding: "2px 12px",
+      borderRadius: "999px",
+      backgroundColor:
+        (entry.paidStatus || "").toLowerCase().trim() === "paid"
+          ? "#4CAF50"
+          : "#F44336",
+      color: "#fff",
+      fontWeight: "600",
       fontSize: "13px",
       textTransform: "capitalize",
     }}

@@ -6,7 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 
 // ✅ Components
 import TopBar from "./components/TopBar";
-import BottomNavBar from "./components/BottomNavBar";
+import BottomNavBar from "./components/BottomNav";
 
 // ✅ Pages
 import EntryFormPage from "./pages/EntryFormPage";
@@ -40,7 +40,7 @@ function App() {
         </Routes>
 
         {/* 🔽 Bottom Nav */}
-        <BottomNavBar />
+        <BottomNav />
       </div>
     </Router>
   );

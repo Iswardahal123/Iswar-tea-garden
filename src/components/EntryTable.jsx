@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  where,
+} from "firebase/firestore";
 import { db, auth } from "../firebase/config";
 import EditModal from "./EditModal";
 
@@ -12,12 +19,12 @@ function EntryTable() {
     if (!user) return;
 
     const q = query(
-      collection(db, "entries"),
+      collection(db, "entries"), // ✅ Correct collection name
       where("userId", "==", user.uid)
     );
 
     const snapshot = await getDocs(q);
-    setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    setEntries(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
   };
 
   useEffect(() => {
@@ -29,11 +36,16 @@ function EntryTable() {
   };
 
   const handleSave = async (updatedData) => {
-    if (!selectedEntry) return;
-    const entryRef = doc(db, "pattaEntries", selectedEntry.id);
-    await updateDoc(entryRef, updatedData);
-    setSelectedEntry(null);
-    fetchEntries();
+    if (!updatedData || !updatedData.id) return;
+
+    try {
+      const entryRef = doc(db, "entries", updatedData.id); // ✅ Correct update path
+      await updateDoc(entryRef, updatedData);
+      setSelectedEntry(null);
+      fetchEntries();
+    } catch (err) {
+      console.error("❌ Error saving entry:", err);
+    }
   };
 
   return (
@@ -48,7 +60,7 @@ function EntryTable() {
           </tr>
         </thead>
         <tbody>
-          {entries.map(entry => (
+          {entries.map((entry) => (
             <React.Fragment key={entry.id}>
               <tr>
                 <td>{entry.date}</td>
@@ -61,7 +73,7 @@ function EntryTable() {
                 </td>
               </tr>
 
-              {/* Expand row only if this entry is selected */}
+              {/* 🔽 Expand row with extra info when selected */}
               {selectedEntry?.id === entry.id && (
                 <tr style={{ backgroundColor: "#fdf6e3" }}>
                   <td colSpan="4">

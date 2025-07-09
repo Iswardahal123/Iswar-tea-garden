@@ -9,7 +9,7 @@ import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav"; // ✅ Corrected import
 
 // ✅ Pages
-import EntryForm from './components/EntryForm';
+import EntryForm from './pages/EntryFormPage';
 import EntryViewPage from "./pages/EntryViewPage";
 
 function App() {

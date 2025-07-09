@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
+import './EntryForm.css';
 
 const EntryForm = () => {
   const [date, setDate] = useState('');
@@ -60,7 +61,7 @@ const EntryForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="entry-form" onSubmit={handleSubmit}>
       <h3>🌿 Add New Entry</h3>
       <input
         type="date"

@@ -9,7 +9,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -35,15 +35,14 @@ function TopBar({ user }) {
   };
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      if (!user) return;
+    if (!user) return;
 
-      const q = query(
-        collection(db, "entries"),
-        where("userId", "==", user.uid)
-      );
-      const snapshot = await getDocs(q);
+    const q = query(
+      collection(db, "entries"),
+      where("userId", "==", user.uid)
+    );
 
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalWeight = 0;
       let totalAmount = 0;
       let totalPaid = 0;
@@ -66,9 +65,9 @@ function TopBar({ user }) {
         totalAdvanceCut,
         totalDue,
       });
-    };
+    });
 
-    fetchSummary();
+    return () => unsubscribe();
   }, [user]);
 
   return (
@@ -96,11 +95,11 @@ function TopBar({ user }) {
               UID: {user?.uid.slice(0, 8)}...
             </MenuItem>
             <Divider />
-            <MenuItem disabled>🧺 Total Pattas: {summary.totalWeight.toFixed(2)} kg</MenuItem>
-            <MenuItem disabled>💰 Total Amount: ₹{summary.totalAmount.toFixed(2)}</MenuItem>
-            <MenuItem disabled>✅ Paid: ₹{summary.totalPaid.toFixed(2)}</MenuItem>
-            <MenuItem disabled>🧾 Advance Cut: ₹{summary.totalAdvanceCut.toFixed(2)}</MenuItem>
-            <MenuItem disabled>❗ Due: ₹{summary.totalDue.toFixed(2)}</MenuItem>
+            <MenuItem disabled>🧺 Total Pattas: {summary.totalWeight} kg</MenuItem>
+            <MenuItem disabled>💰 Total Amount: ₹{summary.totalAmount}</MenuItem>
+            <MenuItem disabled>✅ Paid: ₹{summary.totalPaid}</MenuItem>
+            <MenuItem disabled>🧾 Advance Cut: ₹{summary.totalAdvanceCut}</MenuItem>
+            <MenuItem disabled>❗ Due: ₹{summary.totalDue}</MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
           </Menu>

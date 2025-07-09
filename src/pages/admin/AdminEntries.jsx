@@ -31,6 +31,7 @@ const AdminEntries = () => {
     fetchEntries();
   }, []);
 
+  
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>

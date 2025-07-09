@@ -107,19 +107,19 @@ function TopBar({ user }) {
             <Divider sx={{ my: 1 }} />
 
             <MenuItem disabled>
-              🧺 <strong style={{ marginLeft: 8 }}>Total Pattas:</strong> {summary.totalWeight} kg
+              🧺 <strong style={{ marginLeft: 8 }}>Total Tea weight:</strong> {summary.totalWeight} kg
             </MenuItem>
             <MenuItem disabled>
               💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
             </MenuItem>
             <MenuItem disabled>
-              ✅ <strong style={{ marginLeft: 8 }}>Paid:</strong> ₹{summary.totalPaid}
+              ✅ <strong style={{ marginLeft: 8 }}>Recieved amount:</strong> ₹{summary.totalPaid}
             </MenuItem>
             <MenuItem disabled>
               🧾 <strong style={{ marginLeft: 8 }}>Advance Cut:</strong> ₹{summary.totalAdvanceCut}
             </MenuItem>
             <MenuItem disabled>
-              ❗ <strong style={{ marginLeft: 8 }}>Due:</strong> ₹{summary.totalDue}
+              ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
             </MenuItem>
 
             <Divider sx={{ my: 1 }} />

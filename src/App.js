@@ -6,10 +6,10 @@ import { onAuthStateChanged } from "firebase/auth";
 
 // ✅ Components
 import TopBar from "./components/TopBar";
-import BottomNav from "./components/BottomNav"; // ✅ Corrected import
+import BottomNav from "./components/BottomNav";
 
 // ✅ Pages
-import EntryForm from './pages/EntryFormPage';
+import EntryForm from "./pages/EntryFormPage";      // ✅ Corrected name here
 import EntryViewPage from "./pages/EntryViewPage";
 
 function App() {
@@ -34,7 +34,7 @@ function App() {
 
         {/* 🔁 Pages */}
         <Routes>
-          <Route path="/entry" element={<EntryFormPage />} />
+          <Route path="/entry" element={<EntryForm />} />         {/* ✅ Fixed usage */}
           <Route path="/view" element={<EntryViewPage />} />
           <Route path="*" element={<Navigate to="/entry" />} />
         </Routes>

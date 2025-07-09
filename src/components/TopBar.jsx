@@ -37,11 +37,13 @@ function TopBar({ user }) {
   useEffect(() => {
     const fetchSummary = async () => {
       if (!user) return;
+
       const q = query(
         collection(db, "entries"),
         where("userId", "==", user.uid)
       );
       const snapshot = await getDocs(q);
+
       let totalWeight = 0;
       let totalAmount = 0;
       let totalPaid = 0;
@@ -50,11 +52,11 @@ function TopBar({ user }) {
 
       snapshot.forEach((doc) => {
         const data = doc.data();
-        totalWeight += data.weight || 0;
-        totalAmount += data.total || 0;
-        totalPaid += data.paidAmount || 0;
-        totalAdvanceCut += data.advanceCut || 0;
-        totalDue += data.due || 0;
+        totalWeight += parseFloat(data.weight || 0);
+        totalAmount += parseFloat(data.total || 0);
+        totalPaid += parseFloat(data.paidAmount || 0);
+        totalAdvanceCut += parseFloat(data.advanceCut || 0);
+        totalDue += parseFloat(data.due || 0);
       });
 
       setSummary({
@@ -94,11 +96,11 @@ function TopBar({ user }) {
               UID: {user?.uid.slice(0, 8)}...
             </MenuItem>
             <Divider />
-            <MenuItem disabled>🧺 Total Pattas: {summary.totalWeight} kg</MenuItem>
-            <MenuItem disabled>💰 Total Amount: ₹{summary.totalAmount}</MenuItem>
-            <MenuItem disabled>✅ Paid: ₹{summary.totalPaid}</MenuItem>
-            <MenuItem disabled>🧾 Advance Cut: ₹{summary.totalAdvanceCut}</MenuItem>
-            <MenuItem disabled>❗ Due: ₹{summary.totalDue}</MenuItem>
+            <MenuItem disabled>🧺 Total Pattas: {summary.totalWeight.toFixed(2)} kg</MenuItem>
+            <MenuItem disabled>💰 Total Amount: ₹{summary.totalAmount.toFixed(2)}</MenuItem>
+            <MenuItem disabled>✅ Paid: ₹{summary.totalPaid.toFixed(2)}</MenuItem>
+            <MenuItem disabled>🧾 Advance Cut: ₹{summary.totalAdvanceCut.toFixed(2)}</MenuItem>
+            <MenuItem disabled>❗ Due: ₹{summary.totalDue.toFixed(2)}</MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
           </Menu>

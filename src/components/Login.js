@@ -79,7 +79,7 @@ function Login() {
 
       <p style={orStyle}>or</p>
 
-      {true && (
+      {false && (
   <button onClick={handleGoogleLogin} style={googleBtnStyle}>
     🔐 Login with Google
   </button>

@@ -1,3 +1,4 @@
+// ✅ App.js (Full Updated)
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -5,58 +6,71 @@ import { auth, db } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-// ✅ Pages & Components
+// Components
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
+
+// User Pages
 import EntryFormPage from "./pages/EntryFormPage";
 import EntryViewPage from "./pages/EntryViewPage";
+
+// Admin Pages & Layout
 import AdminLayout from "./pages/admin/AdminLayout";
+import DashboardPage from "./pages/admin/DashboardPage";
+import AdminEntriesPage from "./pages/admin/AdminEntriesPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
-  const [checkingRole, setCheckingRole] = useState(true);
   const navigate = useNavigate();
 
+  const onLogin = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const roleDoc = await getDoc(doc(db, "roles", user.uid));
+    const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/entry");
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-
-      if (currentUser) {
-        try {
-          const roleDoc = await getDoc(doc(db, "roles", currentUser.uid));
-          const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
-
-          if (isAdmin) {
-            navigate("/admin");
-          } else {
-            navigate("/entry");
-          }
-        } catch (err) {
-          console.error("Error checking role:", err.message);
-        } finally {
-          setCheckingRole(false);
-        }
-      } else {
-        setCheckingRole(false);
-      }
     });
-
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
-  if (checkingRole) return <p>🔄 Checking role...</p>;
-  if (!user) return <Login onLogin={() => {}} />;
+  const isAdminPath = window.location.pathname.startsWith("/admin");
+
+  if (!user) {
+    return <Login onLogin={onLogin} />;
+  }
 
   return (
     <>
-      <TopBar user={user} />
+      {!isAdminPath && <TopBar user={user} />}
+
       <Routes>
+        {/* User Routes */}
         <Route path="/entry" element={<EntryFormPage />} />
         <Route path="/view" element={<EntryViewPage />} />
-        <Route path="/admin" element={<AdminLayout />} />
+
+        {/* Admin Routes with nested children */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="entries" element={<AdminEntriesPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/entry" />} />
       </Routes>
-      <BottomNav />
+
+      {!isAdminPath && <BottomNav />}
     </>
   );
 }

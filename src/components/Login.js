@@ -160,7 +160,7 @@ const titleStyle = {
 };
 
 const inputStyle = {
-  width: "100%",
+  width: "92%",
   padding: "12px",
   margin: "10px 0",
   borderRadius: "8px",

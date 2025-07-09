@@ -1,4 +1,4 @@
-// ✅ App.js (Full Updated)
+// ✅ App.js (Fully Fixed)
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -17,9 +17,9 @@ import EntryViewPage from "./pages/EntryViewPage";
 // Admin Pages & Layout
 import AdminLayout from "./pages/admin/AdminLayout";
 import DashboardPage from "./pages/admin/AdminDashboard";
-import AdminEntriesPage from "./pages/admin/AdminEntriesPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
-import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminEntriesPage from "./pages/admin/AdminEntries";
+import AdminUsersPage from "./pages/admin/AdminUsers";
+import AdminSettingsPage from "./pages/admin/AdminSettings";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
@@ -59,7 +59,7 @@ function AppWrapper() {
         <Route path="/entry" element={<EntryFormPage />} />
         <Route path="/view" element={<EntryViewPage />} />
 
-        {/* Admin Routes with nested children */}
+        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="entries" element={<AdminEntriesPage />} />
@@ -67,6 +67,7 @@ function AppWrapper() {
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 
+        {/* Default Redirect */}
         <Route path="*" element={<Navigate to="/entry" />} />
       </Routes>
 

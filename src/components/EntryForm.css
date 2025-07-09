@@ -32,7 +32,7 @@
   outline: none;
 }
 
-.entry-form button {
+.entry-form button [name="sub"] {
   width: 100%;
   padding: 12px;
   margin-top: 10px;

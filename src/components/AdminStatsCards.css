@@ -1,0 +1,35 @@
+.admin-card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.admin-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.admin-card:hover {
+  transform: translateY(-4px);
+}
+
+.admin-card-icon {
+  font-size: 28px;
+}
+
+.admin-card-title {
+  font-size: 14px;
+  color: #777;
+}
+
+.admin-card-value {
+  font-size: 22px;
+  font-weight: bold;
+}

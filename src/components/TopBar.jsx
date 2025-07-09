@@ -7,9 +7,11 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { Box, Tooltip } from "@mui/material";
 
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -32,6 +34,10 @@ function TopBar({ user }) {
   const handleLogout = () => {
     signOut(auth);
     handleClose();
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(user?.uid || "");
   };
 
   useEffect(() => {
@@ -77,30 +83,46 @@ function TopBar({ user }) {
           Ishwar Tea Garden
         </Typography>
         <div>
-          <IconButton
-            size="large"
-            edge="end"
-            color="inherit"
-            onClick={handleMenu}
-          >
+          <IconButton size="large" edge="end" color="inherit" onClick={handleMenu}>
             <AccountCircle />
           </IconButton>
+
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleClose}
-            sx={{ minWidth: "280px" }}
+            PaperProps={{ sx: { minWidth: "300px", p: 1 } }}
           >
+            <Box display="flex" alignItems="center" justifyContent="space-between" px={2} py={1}>
+              <Typography fontSize="14px" fontWeight="bold">
+                UID: {user?.uid?.slice(0, 8)}...
+              </Typography>
+              <Tooltip title="Tap to Copy">
+                <IconButton size="small" onClick={handleCopy}>
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            <Divider sx={{ my: 1 }} />
+
             <MenuItem disabled>
-              UID: {user?.uid.slice(0, 8)}...
+              🧺 <strong style={{ marginLeft: 8 }}>Total Pattas:</strong> {summary.totalWeight} kg
             </MenuItem>
-            <Divider />
-            <MenuItem disabled>🧺 Total Pattas: {summary.totalWeight} kg</MenuItem>
-            <MenuItem disabled>💰 Total Amount: ₹{summary.totalAmount}</MenuItem>
-            <MenuItem disabled>✅ Paid: ₹{summary.totalPaid}</MenuItem>
-            <MenuItem disabled>🧾 Advance Cut: ₹{summary.totalAdvanceCut}</MenuItem>
-            <MenuItem disabled>❗ Due: ₹{summary.totalDue}</MenuItem>
-            <Divider />
+            <MenuItem disabled>
+              💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
+            </MenuItem>
+            <MenuItem disabled>
+              ✅ <strong style={{ marginLeft: 8 }}>Paid:</strong> ₹{summary.totalPaid}
+            </MenuItem>
+            <MenuItem disabled>
+              🧾 <strong style={{ marginLeft: 8 }}>Advance Cut:</strong> ₹{summary.totalAdvanceCut}
+            </MenuItem>
+            <MenuItem disabled>
+              ❗ <strong style={{ marginLeft: 8 }}>Due:</strong> ₹{summary.totalDue}
+            </MenuItem>
+
+            <Divider sx={{ my: 1 }} />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
           </Menu>
         </div>

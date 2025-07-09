@@ -8,85 +8,61 @@ import {
   TableCell,
   TableBody,
   Paper,
-  Switch,
-  IconButton,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
-const AdminUsersPage = () => {
-  const [users, setUsers] = useState([]);
+const AdminEntriesPage = () => {
+  const [entries, setEntries] = useState([]);
+  const [userUIDs, setUserUIDs] = useState(new Set());
 
   useEffect(() => {
-    fetchUsers();
+    const fetchEntries = async () => {
+      try {
+        // Step 1: Get all user UIDs from 'users' collection
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const uids = new Set(usersSnapshot.docs.map((doc) => doc.id));
+        setUserUIDs(uids);
+
+        // Step 2: Fetch all entries from 'entries' collection
+        const entriesSnapshot = await getDocs(collection(db, "entries"));
+        const filteredEntries = entriesSnapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter((entry) => uids.has(entry.uid)); // Filter only registered users' entries
+
+        setEntries(filteredEntries);
+      } catch (error) {
+        console.error("❌ Error fetching entries:", error);
+      }
+    };
+
+    fetchEntries();
   }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, "users"));
-      const data = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
-      console.log("🔥 Users fetched:", data);
-      setUsers(data);
-    } catch (err) {
-      console.error("❌ Error fetching users:", err);
-    }
-  };
-
-  const handleToggleStatus = async (userId, currentStatus) => {
-    try {
-      const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, {
-        enabled: !currentStatus,
-      });
-      fetchUsers(); // Refresh after update
-    } catch (err) {
-      console.error("❌ Error updating status:", err);
-    }
-  };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        👥 Manage Users
+        📋 Entries by Registered Users
       </Typography>
       <Paper elevation={3}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>UID</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>User UID</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Weight</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Due</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.id || "—"}</TableCell>
-                <TableCell>{user.email || "No email"}</TableCell>
-                <TableCell>
-                  <Switch
-                    checked={user.enabled === true}
-                    onChange={() =>
-                      handleToggleStatus(user.id, user.enabled)
-                    }
-                    color="success"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton size="small">
-                    <EditIcon />
-                  </IconButton>
-                </TableCell>
+            {entries.map((entry) => (
+              <TableRow key={entry.id}>
+                <TableCell>{entry.uid}</TableCell>
+                <TableCell>{entry.date}</TableCell>
+                <TableCell>{entry.weight}</TableCell>
+                <TableCell>₹{entry.total}</TableCell>
+                <TableCell>₹{entry.due}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -96,4 +72,4 @@ const AdminUsersPage = () => {
   );
 };
 
-export default AdminUsersPage;
+export default AdminEntriesPage;

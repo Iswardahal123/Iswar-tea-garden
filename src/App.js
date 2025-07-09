@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -15,34 +14,38 @@ import AdminLayout from "./pages/admin/AdminLayout";
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
+  const [checkingRole, setCheckingRole] = useState(true);
   const navigate = useNavigate();
 
-  const onLogin = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const roleDoc = await getDoc(doc(db, "roles", user.uid));
-    console.log("🔥 Role fetched:", roleDoc.exists(), roleDoc.data());
-
-    const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
-
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      navigate("/entry");
-    }
-  };
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
-  if (!user) {
-    return <Login onLogin={onLogin} />;
-  }
+      if (currentUser) {
+        try {
+          const roleDoc = await getDoc(doc(db, "roles", currentUser.uid));
+          const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
+
+          if (isAdmin) {
+            navigate("/admin");
+          } else {
+            navigate("/entry");
+          }
+        } catch (err) {
+          console.error("Error checking role:", err.message);
+        } finally {
+          setCheckingRole(false);
+        }
+      } else {
+        setCheckingRole(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  if (checkingRole) return <p>🔄 Checking role...</p>;
+  if (!user) return <Login onLogin={() => {}} />;
 
   return (
     <>

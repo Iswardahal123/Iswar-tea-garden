@@ -1,71 +1,67 @@
-// App.js
+// src/App.js
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
 import { auth, db } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
+// ✅ Pages & Components
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
 import EntryFormPage from "./pages/EntryFormPage";
 import EntryViewPage from "./pages/EntryViewPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 
-function App() {
+function AppWrapper() {
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const onLogin = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const roleDoc = await getDoc(doc(db, "roles", user.uid));
+    console.log("🔥 Role fetched:", roleDoc.exists(), roleDoc.data());
+
+    const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
+
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/entry");
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-
-        // 🔍 Check admin role in Firestore
-        const roleRef = doc(db, "roles", currentUser.uid);
-        const roleSnap = await getDoc(roleRef);
-
-        if (roleSnap.exists() && roleSnap.data().isAdmin === true) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-      }
-      setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
     });
-
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
-  if (!user) return <Login onLogin={() => {}} />;
+  if (!user) {
+    return <Login onLogin={onLogin} />;
+  }
 
   return (
-    <Router>
-      <div style={{ paddingBottom: "56px" }}>
-        <TopBar user={user} />
-
-        <Routes>
-          {/* ✅ Admin Panel Route */}
-          {isAdmin && <Route path="/admin/*" element={<AdminLayout />} />}
-
-          {/* ✅ User Routes */}
-          <Route path="/entry" element={<EntryFormPage />} />
-          <Route path="/view" element={<EntryViewPage />} />
-          <Route
-            path="*"
-            element={<Navigate to={isAdmin ? "/admin" : "/entry"} />}
-          />
-        </Routes>
-
-        {!isAdmin && <BottomNav />}
-      </div>
-    </Router>
+    <>
+      <TopBar user={user} />
+      <Routes>
+        <Route path="/entry" element={<EntryFormPage />} />
+        <Route path="/view" element={<EntryViewPage />} />
+        <Route path="/admin" element={<AdminLayout />} />
+        <Route path="*" element={<Navigate to="/entry" />} />
+      </Routes>
+      <BottomNav />
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppWrapper />
+    </Router>
+  );
+}

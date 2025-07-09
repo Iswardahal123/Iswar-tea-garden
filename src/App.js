@@ -16,7 +16,7 @@ import EntryViewPage from "./pages/EntryViewPage";
 
 // Admin Pages & Layout
 import AdminLayout from "./pages/admin/AdminLayout";
-import DashboardPage from "./pages/admin/DashboardPage";
+import DashboardPage from "./pages/admin/AdminDashboard";
 import AdminEntriesPage from "./pages/admin/AdminEntriesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";

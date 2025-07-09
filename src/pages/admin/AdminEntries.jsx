@@ -1,91 +1,75 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import {
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-  Typography,
-  Button,
-  Box,
-} from "@mui/material";
+import { Box, Typography, Paper, Button } from "@mui/material";
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState([]);
+  const [userUIDs, setUserUIDs] = useState([]);
+  const [disabledUsers, setDisabledUsers] = useState({});
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const snapshot = await getDocs(collection(db, "entries"));
-      const userMap = {};
+    const fetchUIDs = async () => {
+      const entrySnapshot = await getDocs(collection(db, "entries"));
+      const uidSet = new Set();
 
-      snapshot.forEach((doc) => {
+      entrySnapshot.forEach((doc) => {
         const data = doc.data();
-        const uid = data.uid;
-        const email = data.email;
-
-        if (uid) {
-          if (!userMap[uid]) {
-            userMap[uid] = {
-              uid,
-              email,
-              count: 1,
-            };
-          } else {
-            userMap[uid].count += 1;
-          }
+        if (data.uid) {
+          uidSet.add(data.uid);
         }
       });
 
-      const uniqueUsers = Object.values(userMap);
-      setUsers(uniqueUsers);
+      setUserUIDs([...uidSet]);
     };
 
-    fetchUserData();
+    fetchUIDs();
   }, []);
+
+  const handleToggleDisable = (uid) => {
+    setDisabledUsers((prev) => ({
+      ...prev,
+      [uid]: !prev[uid],
+    }));
+  };
+
+  const handleEditUser = (uid) => {
+    alert(`🛠 Edit user ${uid} clicked`);
+    // Future enhancement: Open modal to edit user info
+  };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        👥 Registered Users
+        👥 Registered Users (From Entries)
       </Typography>
 
-      <Paper sx={{ mt: 2, overflowX: "auto" }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><strong>UID</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Total Entries</strong></TableCell>
-              <TableCell><strong>Actions</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.uid}>
-                <TableCell>{user.uid}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.count}</TableCell>
-                <TableCell>
-                  <Button size="small" variant="outlined" color="primary" sx={{ mr: 1 }}>
-                    Edit
-                  </Button>
-                  <Button size="small" variant="outlined" color="error">
-                    Disable
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {users.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4}>No users found.</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Paper>
+      {userUIDs.length === 0 ? (
+        <Typography>No user data found in entries.</Typography>
+      ) : (
+        userUIDs.map((uid) => (
+          <Paper key={uid} sx={{ p: 2, mb: 2 }}>
+            <Typography><strong>UID:</strong> {uid}</Typography>
+
+            <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+              <Button
+                variant="contained"
+                color="warning"
+                onClick={() => handleEditUser(uid)}
+              >
+                ✏️ Edit
+              </Button>
+
+              <Button
+                variant="contained"
+                color={disabledUsers[uid] ? "success" : "error"}
+                onClick={() => handleToggleDisable(uid)}
+              >
+                {disabledUsers[uid] ? "Enable" : "Disable"}
+              </Button>
+            </Box>
+          </Paper>
+        ))
+      )}
     </Box>
   );
 };

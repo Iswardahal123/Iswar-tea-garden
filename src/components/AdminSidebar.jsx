@@ -1,11 +1,20 @@
 import React from "react";
-import { Drawer, List, ListItem, ListItemText, Toolbar, Typography, Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Toolbar,
+  Typography,
+  Box,
+} from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { label: "Dashboard", path: "/admin" },
@@ -24,22 +33,41 @@ const AdminSidebar = () => {
           width: drawerWidth,
           boxSizing: "border-box",
           backgroundColor: "#1b1b1b",
-          color: "#fff"
+          color: "#fff",
         },
       }}
     >
-      <Toolbar>
+      <Toolbar sx={{ justifyContent: "center" }}>
         <Typography variant="h6" noWrap>
           🛠 Admin Panel
         </Typography>
       </Toolbar>
       <Box sx={{ overflow: "auto" }}>
         <List>
-          {menuItems.map((item) => (
-            <ListItem button key={item.label} onClick={() => navigate(item.path)}>
-              <ListItemText primary={item.label} />
-            </ListItem>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <ListItem
+                button
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  backgroundColor: isActive ? "#333" : "transparent",
+                  "&:hover": {
+                    backgroundColor: "#2c2c2c",
+                  },
+                  cursor: "pointer",
+                }}
+              >
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontWeight: isActive ? "bold" : "normal",
+                  }}
+                />
+              </ListItem>
+            );
+          })}
         </List>
       </Box>
     </Drawer>

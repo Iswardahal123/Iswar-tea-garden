@@ -1,0 +1,50 @@
+/* EntryForm.css */
+
+.entry-form {
+  width: 320px;
+  margin: 60px auto;
+  padding: 25px;
+  background: #fafafa;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.entry-form h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2e7d32;
+}
+
+.entry-form input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: border 0.3s ease;
+  background-color: #fff;
+}
+
+.entry-form input:focus {
+  border-color: #4caf50;
+  outline: none;
+}
+
+.entry-form button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background-color: #388e3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.entry-form button:hover {
+  background-color: #2e7d32;
+}

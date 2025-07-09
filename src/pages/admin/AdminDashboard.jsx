@@ -1,3 +1,4 @@
+// 📁 src/pages/admin/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { Box, Grid, Paper, Typography } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
@@ -11,27 +12,40 @@ const AdminDashboard = () => {
     totalDue: 0,
   });
 
-  
   useEffect(() => {
     const fetchStats = async () => {
-      const snapshot = await getDocs(collection(db, "entries"));
-      let totalEntries = snapshot.size;
-      let totalWeight = 0;
-      let totalAmount = 0;
-      let totalDue = 0;
+      try {
+        const snapshot = await getDocs(collection(db, "entries"));
+        let totalEntries = snapshot.size;
+        let totalWeight = 0;
+        let totalAmount = 0;
+        let totalDue = 0;
 
-      snapshot.forEach((doc) => {
-        const d = doc.data();
-        totalWeight += d.weight || 0;
-        totalAmount += d.total || 0;
-        totalDue += d.due || 0;
-      });
+        snapshot.forEach((doc) => {
+          const d = doc.data();
+          totalWeight += Number(d.weight) || 0;
+          totalAmount += Number(d.total) || 0;
+          totalDue += Number(d.due) || 0;
+        });
 
-      setStats({ totalEntries, totalWeight, totalAmount, totalDue });
+        setStats({ totalEntries, totalWeight, totalAmount, totalDue });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
     };
 
     fetchStats();
   }, []);
+
+  const formatCurrency = (amount) =>
+    `₹${Number(amount).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
+  const dashboardCards = [
+    { label: "Total Entries", value: stats.totalEntries },
+    { label: "Total Weight (kg)", value: stats.totalWeight.toFixed(2) },
+    { label: "Total Amount", value: formatCurrency(stats.totalAmount) },
+    { label: "Total Due", value: formatCurrency(stats.totalDue) },
+  ];
 
   return (
     <Box sx={{ p: 3 }}>
@@ -39,12 +53,7 @@ const AdminDashboard = () => {
         📊 Admin Dashboard
       </Typography>
       <Grid container spacing={3}>
-        {[
-          { label: "Total Entries", value: stats.totalEntries },
-          { label: "Total Weight (kg)", value: stats.totalWeight },
-          { label: "Total Amount", value: `₹${stats.totalAmount}` },
-          { label: "Total Due", value: `₹${stats.totalDue}` },
-        ].map((card) => (
+        {dashboardCards.map((card) => (
           <Grid item xs={12} sm={6} md={3} key={card.label}>
             <Paper elevation={3} sx={{ p: 2 }}>
               <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>

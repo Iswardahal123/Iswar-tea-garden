@@ -76,7 +76,7 @@ const EntryForm = () => {
         onChange={(e) => setWeight(e.target.value)}
         required
       />
-      <button type="submit" disabled={loading}>
+      <button name="sub" type="submit" disabled={loading}>
         {loading ? 'Saving...' : 'Add Entry'}
       </button>
     </form>

@@ -9,7 +9,7 @@ import {
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState("login"); // or 'register'
+  const [mode, setMode] = useState("login");
 
   const handleEmailAuth = async () => {
     try {
@@ -29,22 +29,13 @@ function Login({ onLogin }) {
       await signInWithPopup(auth, provider);
       onLogin();
     } catch (err) {
-      alert("❌ Google login failed!");
+      alert("❌ Google login failed: " + err.message);
     }
   };
 
   return (
-    <div style={{
-      maxWidth: "400px",
-      margin: "50px auto",
-      padding: "30px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-      borderRadius: "10px",
-      background: "#fff"
-    }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-        🌿 Ishwar Tea Garden
-      </h2>
+    <div style={containerStyle}>
+      <h2 style={titleStyle}>🌿 Ishwar Tea Garden</h2>
 
       <input
         type="email"
@@ -60,25 +51,18 @@ function Login({ onLogin }) {
         onChange={(e) => setPassword(e.target.value)}
         style={inputStyle}
       />
+
       <button onClick={handleEmailAuth} style={buttonStyle}>
         {mode === "login" ? "🔑 Login" : "🆕 Register"}
       </button>
 
-      <p style={{ textAlign: "center", margin: "10px 0" }}>or</p>
+      <p style={orStyle}>or</p>
 
       <button onClick={handleGoogleLogin} style={googleBtnStyle}>
         🔐 Login with Google
       </button>
 
-      <p
-        style={{
-          textAlign: "center",
-          marginTop: "20px",
-          cursor: "pointer",
-          color: "#1976d2",
-        }}
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-      >
+      <p style={switchStyle} onClick={() => setMode(mode === "login" ? "register" : "login")}>
         {mode === "login"
           ? "Don't have an account? Register"
           : "Already registered? Login"}
@@ -87,6 +71,20 @@ function Login({ onLogin }) {
   );
 }
 
+const containerStyle = {
+  maxWidth: "400px",
+  margin: "50px auto",
+  padding: "30px",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+  borderRadius: "10px",
+  background: "#fff",
+};
+
+const titleStyle = {
+  textAlign: "center",
+  marginBottom: "20px",
+};
+
 const inputStyle = {
   width: "100%",
   padding: "12px",
@@ -94,6 +92,7 @@ const inputStyle = {
   borderRadius: "6px",
   border: "1px solid #ccc",
   fontSize: "16px",
+  boxSizing: "border-box",
 };
 
 const buttonStyle = {
@@ -116,6 +115,18 @@ const googleBtnStyle = {
   border: "none",
   borderRadius: "6px",
   cursor: "pointer",
+};
+
+const orStyle = {
+  textAlign: "center",
+  margin: "10px 0",
+};
+
+const switchStyle = {
+  textAlign: "center",
+  marginTop: "20px",
+  cursor: "pointer",
+  color: "#1976d2",
 };
 
 export default Login;

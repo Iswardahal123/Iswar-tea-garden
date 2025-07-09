@@ -11,6 +11,7 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
+
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [summary, setSummary] = useState({

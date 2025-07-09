@@ -1,24 +1,39 @@
 import React, { useState } from "react";
-import { auth, provider } from "../firebase/config";
+import { auth, provider, db } from "../firebase/config";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
-function Login({ onLogin }) {
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState("login");
+  const navigate = useNavigate();
+
+  const checkAndRedirectRole = async (uid) => {
+    const roleDoc = await getDoc(doc(db, "roles", uid));
+    const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
+
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/entry");
+    }
+  };
 
   const handleEmailAuth = async () => {
     try {
+      let userCredential;
       if (mode === "login") {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      onLogin();
+      await checkAndRedirectRole(userCredential.user.uid);
     } catch (err) {
       alert("❌ Error: " + err.message);
     }
@@ -26,8 +41,8 @@ function Login({ onLogin }) {
 
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
-      onLogin();
+      const result = await signInWithPopup(auth, provider);
+      await checkAndRedirectRole(result.user.uid);
     } catch (err) {
       alert("❌ Google login failed: " + err.message);
     }

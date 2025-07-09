@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { auth, provider, db } from "../firebase/config";
+import { auth, db, provider } from "../firebase/config";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -15,13 +15,17 @@ function Login() {
   const navigate = useNavigate();
 
   const checkAndRedirectRole = async (uid) => {
-    const roleDoc = await getDoc(doc(db, "roles", uid));
-    const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
+    try {
+      const roleDoc = await getDoc(doc(db, "roles", uid));
+      const isAdmin = roleDoc.exists() && roleDoc.data().isAdmin;
 
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      navigate("/entry");
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/entry");
+      }
+    } catch (err) {
+      alert("❌ Error checking role: " + err.message);
     }
   };
 
@@ -33,7 +37,8 @@ function Login() {
       } else {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
       }
-      await checkAndRedirectRole(userCredential.user.uid);
+      const uid = userCredential.user.uid;
+      await checkAndRedirectRole(uid);
     } catch (err) {
       alert("❌ Error: " + err.message);
     }
@@ -42,7 +47,8 @@ function Login() {
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
-      await checkAndRedirectRole(result.user.uid);
+      const uid = result.user.uid;
+      await checkAndRedirectRole(uid);
     } catch (err) {
       alert("❌ Google login failed: " + err.message);
     }

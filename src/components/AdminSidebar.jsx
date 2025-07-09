@@ -1,17 +1,48 @@
-import React from 'react';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import React from "react";
+import { Drawer, List, ListItem, ListItemText, Toolbar, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const AdminSidebar = ({ onSelect }) => {
+const drawerWidth = 240;
+
+const AdminSidebar = () => {
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { label: "Dashboard", path: "/admin" },
+    { label: "All Entries", path: "/admin/entries" },
+    { label: "Users", path: "/admin/users" },
+    { label: "Settings", path: "/admin/settings" },
+  ];
+
   return (
-    <div className="admin-sidebar">
-      <h2 className="sidebar-title">🛠️ Admin Panel</h2>
-      <ul className="sidebar-menu">
-        <li onClick={() => onSelect('dashboard')}>📊 Dashboard</li>
-        <li onClick={() => onSelect('entries')}>📁 All Entries</li>
-        <li onClick={() => signOut(auth)} className="logout">🚪 Logout</li>
-      </ul>
-    </div>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        [`& .MuiDrawer-paper`]: {
+          width: drawerWidth,
+          boxSizing: "border-box",
+          backgroundColor: "#1b1b1b",
+          color: "#fff"
+        },
+      }}
+    >
+      <Toolbar>
+        <Typography variant="h6" noWrap>
+          🛠 Admin Panel
+        </Typography>
+      </Toolbar>
+      <Box sx={{ overflow: "auto" }}>
+        <List>
+          {menuItems.map((item) => (
+            <ListItem button key={item.label} onClick={() => navigate(item.path)}>
+              <ListItemText primary={item.label} />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    </Drawer>
   );
 };
 

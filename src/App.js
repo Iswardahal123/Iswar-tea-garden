@@ -4,12 +4,12 @@ import Login from "./components/Login";
 import { auth } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 
-// ✅ Components
+// âœ… Components
 import TopBar from "./components/TopBar";
-import BottomNav from "./components/BottomNav";
+import BottomNav from "./components/BottomNav"; // âœ… Corrected import
 
-// ✅ Pages
-import EntryForm from "./pages/EntryFormPage";      // ✅ Corrected name here
+// âœ… Pages
+import EntryFormPage from "./pages/EntryFormPage";
 import EntryViewPage from "./pages/EntryViewPage";
 
 function App() {
@@ -29,17 +29,17 @@ function App() {
   return (
     <Router>
       <div style={{ paddingBottom: "56px" }}>
-        {/* 🔼 Top Bar */}
+        {/* ðŸ”¼ Top Bar */}
         <TopBar user={user} />
 
-        {/* 🔁 Pages */}
+        {/* ðŸ” Pages */}
         <Routes>
-          <Route path="/entry" element={<EntryForm />} />         {/* ✅ Fixed usage */}
+          <Route path="/entry" element={<EntryFormPage />} />
           <Route path="/view" element={<EntryViewPage />} />
           <Route path="*" element={<Navigate to="/entry" />} />
         </Routes>
 
-        {/* 🔽 Bottom Nav */}
+        {/* ðŸ”½ Bottom Nav */}
         <BottomNav />
       </div>
     </Router>

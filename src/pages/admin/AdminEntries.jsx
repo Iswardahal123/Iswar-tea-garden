@@ -1,4 +1,4 @@
-// 📁 src/pages/admin/AdminEntriesPage.jsx
+// 📁 src/pages/admin/AdminUsersPage.jsx
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -10,38 +10,95 @@ import {
   TableCell,
   TableBody,
   CircularProgress,
+  IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
+  Switch,
 } from "@mui/material";
-import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+} from "firebase/firestore";
+import EditIcon from "@mui/icons-material/Edit";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
-const AdminEntriesPage = () => {
-  const [entries, setEntries] = useState([]);
+const AdminUsersPage = () => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    const fetchEntries = async () => {
+    const fetchUsers = async () => {
       try {
-        const snapshot = await getDocs(collection(db, "entries"));
+        const snapshot = await getDocs(collection(db, "users"));
         const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setEntries(data);
+        setUsers(data);
       } catch (err) {
-        console.error("Error fetching entries:", err.message);
+        console.error("Error fetching users:", err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEntries();
+    fetchUsers();
   }, []);
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    try {
+      await updateDoc(doc(db, "users", id), { enabled: !currentStatus });
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === id ? { ...u, enabled: !currentStatus } : u
+        )
+      );
+    } catch (err) {
+      console.error("Status toggle error:", err.message);
+    }
+  };
+
+  const handleAddUser = async () => {
+    try {
+      await addDoc(collection(db, "users"), {
+        email: newEmail,
+        password: newPassword,
+        enabled: true,
+      });
+      setAddOpen(false);
+      setNewEmail("");
+      setNewPassword("");
+      window.location.reload(); // Refresh to fetch updated users
+    } catch (err) {
+      console.error("Error adding user:", err.message);
+    }
+  };
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        📋 All Tea Collection Entries
+        👤 Manage Users
       </Typography>
+
+      <Button
+        startIcon={<PersonAddIcon />}
+        variant="contained"
+        onClick={() => setAddOpen(true)}
+        sx={{ mb: 2 }}
+      >
+        Add User
+      </Button>
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
@@ -52,33 +109,68 @@ const AdminEntriesPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Weight (kg)</TableCell>
-                <TableCell>Rate</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Paid</TableCell>
-                <TableCell>Due</TableCell>
-                <TableCell>Date</TableCell>
+                <TableCell>UID</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>{entry.name}</TableCell>
-                  <TableCell>{entry.weight}</TableCell>
-                  <TableCell>{entry.rate}</TableCell>
-                  <TableCell>₹{entry.total}</TableCell>
-                  <TableCell>₹{entry.paid}</TableCell>
-                  <TableCell>₹{entry.due}</TableCell>
-                  <TableCell>{entry.date}</TableCell>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={user.enabled}
+                      onChange={() =>
+                        handleToggleStatus(user.id, user.enabled)
+                      }
+                      color="success"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small">
+                      <EditIcon />
+                    </IconButton>
+                    {/* Future: Edit Password dialog can be triggered here */}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </Paper>
       )}
+
+      {/* ➕ Add User Dialog */}
+      <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
+        <DialogTitle>➕ Add New User</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="Email"
+            fullWidth
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Password"
+            fullWidth
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            type="password"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddOpen(false)}>Cancel</Button>
+          <Button onClick={handleAddUser} variant="contained">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
-export default AdminEntriesPage;
+export default AdminUsersPage;

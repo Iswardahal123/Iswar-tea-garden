@@ -1,78 +1,84 @@
+// 📁 src/pages/admin/AdminEntriesPage.jsx
 import React, { useEffect, useState } from "react";
 import {
-  collection,
-  getDocs,
-  query,
-  orderBy
-} from "firebase/firestore";
-import { db } from "../../firebase/config";
-import {
   Box,
+  Typography,
+  Paper,
   Table,
   TableHead,
-  TableBody,
   TableRow,
   TableCell,
-  TableContainer,
-  Paper,
-  Typography
+  TableBody,
+  CircularProgress,
 } from "@mui/material";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
-const AdminEntries = () => {
+const AdminEntriesPage = () => {
   const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEntries = async () => {
-      const q = query(collection(db, "entries"), orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setEntries(data);
+      try {
+        const snapshot = await getDocs(collection(db, "entries"));
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEntries(data);
+      } catch (err) {
+        console.error("Error fetching entries:", err.message);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchEntries();
   }, []);
 
-  
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        📒 All User Entries
+        📋 All Tea Collection Entries
       </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>User ID</TableCell>
-              <TableCell>Weight</TableCell>
-              <TableCell>Rate</TableCell>
-              <TableCell>Total</TableCell>
-              <TableCell>Paid</TableCell>
-              <TableCell>Advance</TableCell>
-              <TableCell>Due</TableCell>
-              <TableCell>Status</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {entries.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>{entry.date}</TableCell>
-                <TableCell>{entry.userId?.slice(0, 6)}...</TableCell>
-                <TableCell>{entry.weight}</TableCell>
-                <TableCell>{entry.rate}</TableCell>
-                <TableCell>{entry.total}</TableCell>
-                <TableCell>{entry.paidAmount}</TableCell>
-                <TableCell>{entry.advanceCut}</TableCell>
-                <TableCell>{entry.due}</TableCell>
-                <TableCell style={{ color: entry.paidStatus === "paid" ? "green" : "red" }}>
-                  {entry.paidStatus}
-                </TableCell>
+
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Paper elevation={3}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Weight (kg)</TableCell>
+                <TableCell>Rate</TableCell>
+                <TableCell>Total</TableCell>
+                <TableCell>Paid</TableCell>
+                <TableCell>Due</TableCell>
+                <TableCell>Date</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {entries.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell>{entry.name}</TableCell>
+                  <TableCell>{entry.weight}</TableCell>
+                  <TableCell>{entry.rate}</TableCell>
+                  <TableCell>₹{entry.total}</TableCell>
+                  <TableCell>₹{entry.paid}</TableCell>
+                  <TableCell>₹{entry.due}</TableCell>
+                  <TableCell>{entry.date}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
     </Box>
   );
 };
 
-export default AdminEntries;
+export default AdminEntriesPage;

@@ -1,65 +1,69 @@
+// App.js
 import React, { useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase/config";
-
-
-// ✅ User Components
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./components/Login";
+import { auth, db } from "./firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
-
-// ✅ User Pages
 import EntryFormPage from "./pages/EntryFormPage";
 import EntryViewPage from "./pages/EntryViewPage";
-
-// ✅ Admin Layout & Pages
 import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminSettings from "./pages/admin/AdminSettings";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // 🔍 Check admin role in Firestore
+        const roleRef = doc(db, "roles", currentUser.uid);
+        const roleSnap = await getDoc(roleRef);
+
+        if (roleSnap.exists() && roleSnap.data().isAdmin === true) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
+      setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
+  if (loading) return <p>Loading...</p>;
   if (!user) return <Login onLogin={() => {}} />;
-
-  const isAdmin = user.email === "admin@teagarden.com"; // 👈 customize admin email
 
   return (
     <Router>
-      {isAdmin ? (
+      <div style={{ paddingBottom: "56px" }}>
+        <TopBar user={user} />
+
         <Routes>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/admin" />} />
+          {/* ✅ Admin Panel Route */}
+          {isAdmin && <Route path="/admin/*" element={<AdminLayout />} />}
+
+          {/* ✅ User Routes */}
+          <Route path="/entry" element={<EntryFormPage />} />
+          <Route path="/view" element={<EntryViewPage />} />
+          <Route
+            path="*"
+            element={<Navigate to={isAdmin ? "/admin" : "/entry"} />}
+          />
         </Routes>
-      ) : (
-        <div style={{ paddingBottom: "56px" }}>
-          <TopBar user={user} />
-          <Routes>
-            <Route path="/entry" element={<EntryFormPage />} />
-            <Route path="/view" element={<EntryViewPage />} />
-            <Route path="*" element={<Navigate to="/entry" />} />
-          </Routes>
-          <BottomNav />
-        </div>
-      )}
+
+        {!isAdmin && <BottomNav />}
+      </div>
     </Router>
   );
 }

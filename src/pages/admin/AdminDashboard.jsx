@@ -11,6 +11,7 @@ const AdminDashboard = () => {
     totalDue: 0,
   });
 
+  
   useEffect(() => {
     const fetchStats = async () => {
       const snapshot = await getDocs(collection(db, "entries"));

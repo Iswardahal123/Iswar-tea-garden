@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./components/Login";
-import { auth } from "./firebase/config";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase/config";
 
-// ✅ Components
+// ✅ User Components
+import Login from "./components/Login";
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
-import AdminSidebar from "./components/AdminSidebar";
 
-// ✅ Pages
+// ✅ User Pages
 import EntryFormPage from "./pages/EntryFormPage";
 import EntryViewPage from "./pages/EntryViewPage";
+
+// ✅ Admin Layout & Pages
+import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminEntries from "./pages/admin/AdminEntries";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSettings from "./pages/admin/AdminSettings";
 
@@ -27,38 +33,32 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  if (!user) {
-    return <Login onLogin={() => {}} />;
-  }
+  if (!user) return <Login onLogin={() => {}} />;
 
-  const isAdmin = user?.email === "admin@example.com"; // ✅ Change this to real admin check
+  const isAdmin = user.email === "admin@teagarden.com"; // 👈 customize admin email
 
   return (
     <Router>
-      <div style={{ paddingBottom: isAdmin ? 0 : "56px", display: "flex" }}>
-        {isAdmin && <AdminSidebar />}
-        <div style={{ flex: 1 }}>
-          {!isAdmin && <TopBar user={user} />}
+      {isAdmin ? (
+        <Routes>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/admin" />} />
+        </Routes>
+      ) : (
+        <div style={{ paddingBottom: "56px" }}>
+          <TopBar user={user} />
           <Routes>
-            {isAdmin ? (
-              <>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/entries" element={<AdminEntries />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="*" element={<Navigate to="/admin" />} />
-              </>
-            ) : (
-              <>
-                <Route path="/entry" element={<EntryFormPage />} />
-                <Route path="/view" element={<EntryViewPage />} />
-                <Route path="*" element={<Navigate to="/entry" />} />
-              </>
-            )}
+            <Route path="/entry" element={<EntryFormPage />} />
+            <Route path="/view" element={<EntryViewPage />} />
+            <Route path="*" element={<Navigate to="/entry" />} />
           </Routes>
-          {!isAdmin && <BottomNav />}
+          <BottomNav />
         </div>
-      </div>
+      )}
     </Router>
   );
 }

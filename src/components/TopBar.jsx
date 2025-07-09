@@ -7,10 +7,10 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { Box, Tooltip } from "@mui/material";
 
 function TopBar({ user }) {
@@ -40,43 +40,37 @@ function TopBar({ user }) {
     navigator.clipboard.writeText(user?.uid || "");
   };
 
-  const handleReceivePayment = (amount) => {
-    if (!amount || amount <= 0) {
-      alert("No due amount to pay.");
+  const handleDeleteAllData = async () => {
+    const confirmText = prompt("⚠️ Type CONFIRM to delete all your entry data");
+    if (confirmText !== "CONFIRM") {
+      alert("❌ Deletion cancelled.");
       return;
     }
 
-    const options = {
-      key: "rzp_test_AvXRP4rfovLSun", // 🔑 Your Razorpay Test Key
-      amount: amount * 100, // Amount in paise
-      currency: "INR",
-      name: "Ishwar Tea Garden",
-      description: "Tea Payment Collection",
-      image: "/logo.png", // Optional: place your logo in public folder
-      handler: function (response) {
-        alert("✅ Payment Successful! Payment ID: " + response.razorpay_payment_id);
-        // TODO: Firebase logic to subtract paid amount from due (implement this)
-      },
-      prefill: {
-        email: user.email || "",
-      },
-      theme: {
-        color: "#3f51b5",
-      },
-    };
+    try {
+      const q = query(collection(db, "entries"), where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      if (snapshot.empty) {
+        alert("No data found to delete.");
+        return;
+      }
+
+      const deletePromises = snapshot.docs.map((docSnap) => deleteDoc(doc(db, "entries", docSnap.id)));
+      await Promise.all(deletePromises);
+
+      alert("✅ All your entry data has been deleted.");
+    } catch (err) {
+      alert("❌ Failed to delete: " + err.message);
+    }
+
+    handleClose();
   };
 
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, "entries"),
-      where("userId", "==", user.uid)
-    );
-
+    const q = query(collection(db, "entries"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalWeight = 0;
       let totalAmount = 0;
@@ -142,7 +136,7 @@ function TopBar({ user }) {
               💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
             </MenuItem>
             <MenuItem disabled>
-              ✅ <strong style={{ marginLeft: 8 }}>Received amount:</strong> ₹{summary.totalPaid}
+              ✅ <strong style={{ marginLeft: 8 }}>Recieved amount:</strong> ₹{summary.totalPaid}
             </MenuItem>
             <MenuItem disabled>
               🧾 <strong style={{ marginLeft: 8 }}>Advance Cut:</strong> ₹{summary.totalAdvanceCut}
@@ -151,11 +145,12 @@ function TopBar({ user }) {
               ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
             </MenuItem>
 
-            <MenuItem onClick={() => handleReceivePayment(summary.totalDue)}>
-              💵 Receive Payment
+            <Divider sx={{ my: 1 }} />
+
+            <MenuItem onClick={handleDeleteAllData}>
+              🗑️ Delete All My Entry Data
             </MenuItem>
 
-            <Divider sx={{ my: 1 }} />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
           </Menu>
         </div>

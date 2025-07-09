@@ -12,47 +12,46 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchUserList = async () => {
-      try {
-        const entriesSnapshot = await getDocs(collection(db, "entries"));
+    const fetchUsersFromEntries = async () => {
+      const entriesSnapshot = await getDocs(collection(db, "entries"));
 
-        // ✅ Step 1: Get all UIDs from entries
-        const uidCountMap = new Map();
-        entriesSnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.uid) {
-            uidCountMap.set(data.uid, (uidCountMap.get(data.uid) || 0) + 1);
+      const userMap = new Map();
+
+      entriesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const uid = data.uid;
+        const email = data.email;
+
+        if (uid && email) {
+          if (!userMap.has(uid)) {
+            userMap.set(uid, { uid, email, totalEntries: 1 });
+          } else {
+            const existing = userMap.get(uid);
+            userMap.set(uid, {
+              ...existing,
+              totalEntries: existing.totalEntries + 1,
+            });
           }
-        });
-
-        // ✅ Step 2: Get emails from users collection using UIDs
-        const userList = [];
-        for (let [uid, count] of uidCountMap.entries()) {
-          const userDoc = await getDoc(doc(db, "users", uid));
-          const email = userDoc.exists() ? userDoc.data().email : "N/A";
-          userList.push({ uid, email, totalEntries: count });
         }
+      });
 
-        setUsers(userList);
-      } catch (error) {
-        console.error("❌ Failed to fetch user list:", error);
-      }
+      setUsers(Array.from(userMap.values()));
     };
 
-    fetchUserList();
+    fetchUsersFromEntries();
   }, []);
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        👥 Registered Users from Entries
+        👥 Users (Fetched from Entries)
       </Typography>
       <Paper elevation={3}>
         <Table>

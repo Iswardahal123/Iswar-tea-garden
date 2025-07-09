@@ -8,61 +8,76 @@ import {
   TableCell,
   TableBody,
   Paper,
+  IconButton,
 } from "@mui/material";
-import { collection, getDocs } from "firebase/firestore";
+import EditIcon from "@mui/icons-material/Edit";
+import BlockIcon from "@mui/icons-material/Block";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
-const AdminEntriesPage = () => {
-  const [entries, setEntries] = useState([]);
-  const [userUIDs, setUserUIDs] = useState(new Set());
+const AdminUsersPage = () => {
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchEntries = async () => {
+    const fetchUserList = async () => {
       try {
-        // Step 1: Get all user UIDs from 'users' collection
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const uids = new Set(usersSnapshot.docs.map((doc) => doc.id));
-        setUserUIDs(uids);
-
-        // Step 2: Fetch all entries from 'entries' collection
         const entriesSnapshot = await getDocs(collection(db, "entries"));
-        const filteredEntries = entriesSnapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((entry) => uids.has(entry.uid)); // Filter only registered users' entries
 
-        setEntries(filteredEntries);
+        // ✅ Step 1: Get all UIDs from entries
+        const uidCountMap = new Map();
+        entriesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.uid) {
+            uidCountMap.set(data.uid, (uidCountMap.get(data.uid) || 0) + 1);
+          }
+        });
+
+        // ✅ Step 2: Get emails from users collection using UIDs
+        const userList = [];
+        for (let [uid, count] of uidCountMap.entries()) {
+          const userDoc = await getDoc(doc(db, "users", uid));
+          const email = userDoc.exists() ? userDoc.data().email : "N/A";
+          userList.push({ uid, email, totalEntries: count });
+        }
+
+        setUsers(userList);
       } catch (error) {
-        console.error("❌ Error fetching entries:", error);
+        console.error("❌ Failed to fetch user list:", error);
       }
     };
 
-    fetchEntries();
+    fetchUserList();
   }, []);
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        📋 Entries by Registered Users
+        👥 Registered Users from Entries
       </Typography>
       <Paper elevation={3}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>User UID</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Weight</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Due</TableCell>
+              <TableCell>UID</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Total Entries</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>{entry.uid}</TableCell>
-                <TableCell>{entry.date}</TableCell>
-                <TableCell>{entry.weight}</TableCell>
-                <TableCell>₹{entry.total}</TableCell>
-                <TableCell>₹{entry.due}</TableCell>
+            {users.map((user) => (
+              <TableRow key={user.uid}>
+                <TableCell>{user.uid}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.totalEntries}</TableCell>
+                <TableCell>
+                  <IconButton color="primary">
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton color="error">
+                    <BlockIcon />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -72,4 +87,4 @@ const AdminEntriesPage = () => {
   );
 };
 
-export default AdminEntriesPage;
+export default AdminUsersPage;

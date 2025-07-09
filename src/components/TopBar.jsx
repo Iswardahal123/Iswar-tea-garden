@@ -82,7 +82,7 @@ function TopBar({ user }) {
     const amount = summary.totalDue * 100; // Convert to paisa
 
     const options = {
-      key: "rzp_test_YourApiKeyHere", // 🔴 Replace with your Razorpay Test Key
+      key: "rzp_test_AvXRP4rfovLSun", // 🔴 Replace with your Razorpay Test Key
       amount,
       currency: "INR",
       name: "Ishwar Tea Garden",

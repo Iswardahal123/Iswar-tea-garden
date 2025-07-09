@@ -10,8 +10,8 @@ import Divider from "@mui/material/Divider";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { Box, Tooltip } from "@mui/material";
+import { collection, doc, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import { Box, Tooltip, Button } from "@mui/material";
 
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +43,7 @@ function TopBar({ user }) {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, "entries"),
-      where("userId", "==", user.uid)
-    );
+    const q = query(collection(db, "entries"), where("userId", "==", user.uid));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalWeight = 0;
@@ -76,12 +73,63 @@ function TopBar({ user }) {
     return () => unsubscribe();
   }, [user]);
 
+  const handleReceivePayment = async () => {
+    if (summary.totalDue <= 0) {
+      alert("🎉 No pending due to pay!");
+      return;
+    }
+
+    const amount = summary.totalDue * 100; // Convert to paisa
+
+    const options = {
+      key: "rzp_test_YourApiKeyHere", // 🔴 Replace with your Razorpay Test Key
+      amount,
+      currency: "INR",
+      name: "Ishwar Tea Garden",
+      description: "Tea Due Payment",
+      image: "https://your-logo-url.com/logo.png",
+      handler: async function (response) {
+        try {
+          // Subtract from all entries
+          const q = query(collection(db, "entries"), where("userId", "==", user.uid));
+          const snapshot = await onSnapshot(q, async (snap) => {
+            snap.forEach(async (entryDoc) => {
+              const ref = doc(db, "entries", entryDoc.id);
+              const entry = entryDoc.data();
+              const newDue = Math.max((entry.due || 0) - summary.totalDue, 0);
+              const newPaid = (entry.paidAmount || 0) + summary.totalDue;
+
+              await updateDoc(ref, {
+                due: newDue,
+                paidAmount: newPaid,
+              });
+            });
+          });
+
+          alert("✅ Payment successful and due updated.");
+        } catch (err) {
+          alert("❌ Failed to update after payment: " + err.message);
+        }
+      },
+      prefill: {
+        email: user.email,
+      },
+      theme: {
+        color: "#1b5e20",
+      },
+    };
+
+    const razor = new window.Razorpay(options);
+    razor.open();
+  };
+
   return (
     <AppBar position="static" color="primary">
       <Toolbar sx={{ justifyContent: "space-between" }}>
         <Typography variant="h6" component="div">
           Ishwar Tea Garden
         </Typography>
+
         <div>
           <IconButton size="large" edge="end" color="inherit" onClick={handleMenu}>
             <AccountCircle />
@@ -113,14 +161,25 @@ function TopBar({ user }) {
               💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
             </MenuItem>
             <MenuItem disabled>
-              ✅ <strong style={{ marginLeft: 8 }}>Recieved amount:</strong> ₹{summary.totalPaid}
+              ✅ <strong style={{ marginLeft: 8 }}>Received:</strong> ₹{summary.totalPaid}
             </MenuItem>
             <MenuItem disabled>
               🧾 <strong style={{ marginLeft: 8 }}>Advance Cut:</strong> ₹{summary.totalAdvanceCut}
             </MenuItem>
             <MenuItem disabled>
-              ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
+              ❗ <strong style={{ marginLeft: 8 }}>Balance:</strong> ₹{summary.totalDue}
             </MenuItem>
+
+            <Box px={2} py={1}>
+              <Button
+                variant="contained"
+                fullWidth
+                color="secondary"
+                onClick={handleReceivePayment}
+              >
+                📥 Receive Payment
+              </Button>
+            </Box>
 
             <Divider sx={{ my: 1 }} />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>

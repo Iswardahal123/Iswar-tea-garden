@@ -1,66 +1,65 @@
 import React, { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase/config";
 import {
-  Box,
-  Typography,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
   Paper,
-  IconButton,
+  Typography,
+  Button,
+  Box,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import BlockIcon from "@mui/icons-material/Block";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase/config";
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    const fetchUsersFromEntries = async () => {
-      const entriesSnapshot = await getDocs(collection(db, "entries"));
+    const fetchUserData = async () => {
+      const snapshot = await getDocs(collection(db, "entries"));
+      const userMap = {};
 
-      const userMap = new Map();
-
-      entriesSnapshot.forEach((doc) => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
         const uid = data.uid;
         const email = data.email;
 
-        if (uid && email) {
-          if (!userMap.has(uid)) {
-            userMap.set(uid, { uid, email, totalEntries: 1 });
+        if (uid) {
+          if (!userMap[uid]) {
+            userMap[uid] = {
+              uid,
+              email,
+              count: 1,
+            };
           } else {
-            const existing = userMap.get(uid);
-            userMap.set(uid, {
-              ...existing,
-              totalEntries: existing.totalEntries + 1,
-            });
+            userMap[uid].count += 1;
           }
         }
       });
 
-      setUsers(Array.from(userMap.values()));
+      const uniqueUsers = Object.values(userMap);
+      setUsers(uniqueUsers);
     };
 
-    fetchUsersFromEntries();
+    fetchUserData();
   }, []);
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        👥 Users (Fetched from Entries)
+        👥 Registered Users
       </Typography>
-      <Paper elevation={3}>
+
+      <Paper sx={{ mt: 2, overflowX: "auto" }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>UID</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Total Entries</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell><strong>UID</strong></TableCell>
+              <TableCell><strong>Email</strong></TableCell>
+              <TableCell><strong>Total Entries</strong></TableCell>
+              <TableCell><strong>Actions</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -68,17 +67,22 @@ const AdminUsersPage = () => {
               <TableRow key={user.uid}>
                 <TableCell>{user.uid}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.totalEntries}</TableCell>
+                <TableCell>{user.count}</TableCell>
                 <TableCell>
-                  <IconButton color="primary">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error">
-                    <BlockIcon />
-                  </IconButton>
+                  <Button size="small" variant="outlined" color="primary" sx={{ mr: 1 }}>
+                    Edit
+                  </Button>
+                  <Button size="small" variant="outlined" color="error">
+                    Disable
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
+            {users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4}>No users found.</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Paper>

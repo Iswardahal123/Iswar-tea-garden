@@ -7,11 +7,11 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
-import { collection, doc, onSnapshot, query, updateDoc, where } from "firebase/firestore";
-import { Box, Tooltip, Button } from "@mui/material";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { Box, Tooltip } from "@mui/material";
 
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -40,10 +40,42 @@ function TopBar({ user }) {
     navigator.clipboard.writeText(user?.uid || "");
   };
 
+  const handleReceivePayment = (amount) => {
+    if (!amount || amount <= 0) {
+      alert("No due amount to pay.");
+      return;
+    }
+
+    const options = {
+      key: "rzp_test_AvXRP4rfovLSun", // 🔑 Your Razorpay Test Key
+      amount: amount * 100, // Amount in paise
+      currency: "INR",
+      name: "Ishwar Tea Garden",
+      description: "Tea Payment Collection",
+      image: "/logo.png", // Optional: place your logo in public folder
+      handler: function (response) {
+        alert("✅ Payment Successful! Payment ID: " + response.razorpay_payment_id);
+        // TODO: Firebase logic to subtract paid amount from due (implement this)
+      },
+      prefill: {
+        email: user.email || "",
+      },
+      theme: {
+        color: "#3f51b5",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, "entries"), where("userId", "==", user.uid));
+    const q = query(
+      collection(db, "entries"),
+      where("userId", "==", user.uid)
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalWeight = 0;
@@ -73,63 +105,12 @@ function TopBar({ user }) {
     return () => unsubscribe();
   }, [user]);
 
-  const handleReceivePayment = async () => {
-    if (summary.totalDue <= 0) {
-      alert("🎉 No pending due to pay!");
-      return;
-    }
-
-    const amount = summary.totalDue * 100; // Convert to paisa
-
-    const options = {
-      key: "rzp_test_AvXRP4rfovLSun", // 🔴 Replace with your Razorpay Test Key
-      amount,
-      currency: "INR",
-      name: "Ishwar Tea Garden",
-      description: "Tea Due Payment",
-      image: "https://your-logo-url.com/logo.png",
-      handler: async function (response) {
-        try {
-          // Subtract from all entries
-          const q = query(collection(db, "entries"), where("userId", "==", user.uid));
-          const snapshot = await onSnapshot(q, async (snap) => {
-            snap.forEach(async (entryDoc) => {
-              const ref = doc(db, "entries", entryDoc.id);
-              const entry = entryDoc.data();
-              const newDue = Math.max((entry.due || 0) - summary.totalDue, 0);
-              const newPaid = (entry.paidAmount || 0) + summary.totalDue;
-
-              await updateDoc(ref, {
-                due: newDue,
-                paidAmount: newPaid,
-              });
-            });
-          });
-
-          alert("✅ Payment successful and due updated.");
-        } catch (err) {
-          alert("❌ Failed to update after payment: " + err.message);
-        }
-      },
-      prefill: {
-        email: user.email,
-      },
-      theme: {
-        color: "#1b5e20",
-      },
-    };
-
-    const razor = new window.Razorpay(options);
-    razor.open();
-  };
-
   return (
     <AppBar position="static" color="primary">
       <Toolbar sx={{ justifyContent: "space-between" }}>
         <Typography variant="h6" component="div">
           Ishwar Tea Garden
         </Typography>
-
         <div>
           <IconButton size="large" edge="end" color="inherit" onClick={handleMenu}>
             <AccountCircle />
@@ -161,25 +142,18 @@ function TopBar({ user }) {
               💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
             </MenuItem>
             <MenuItem disabled>
-              ✅ <strong style={{ marginLeft: 8 }}>Received:</strong> ₹{summary.totalPaid}
+              ✅ <strong style={{ marginLeft: 8 }}>Received amount:</strong> ₹{summary.totalPaid}
             </MenuItem>
             <MenuItem disabled>
               🧾 <strong style={{ marginLeft: 8 }}>Advance Cut:</strong> ₹{summary.totalAdvanceCut}
             </MenuItem>
             <MenuItem disabled>
-              ❗ <strong style={{ marginLeft: 8 }}>Balance:</strong> ₹{summary.totalDue}
+              ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
             </MenuItem>
 
-            <Box px={2} py={1}>
-              <Button
-                variant="contained"
-                fullWidth
-                color="secondary"
-                onClick={handleReceivePayment}
-              >
-                📥 Receive Payment
-              </Button>
-            </Box>
+            <MenuItem onClick={() => handleReceivePayment(summary.totalDue)}>
+              💵 Receive Payment
+            </MenuItem>
 
             <Divider sx={{ my: 1 }} />
             <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>

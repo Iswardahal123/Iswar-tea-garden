@@ -79,9 +79,11 @@ function Login() {
 
       <p style={orStyle}>or</p>
 
-      <button onClick={handleGoogleLogin} style={googleBtnStyle}>
-        🔐 Login with Google
-      </button>
+      {true && (
+  <button onClick={handleGoogleLogin} style={googleBtnStyle}>
+    🔐 Login with Google
+  </button>
+)}
 
       <p style={switchStyle} onClick={() => setMode(mode === "login" ? "register" : "login")}>
         {mode === "login"

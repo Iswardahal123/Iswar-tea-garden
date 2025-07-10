@@ -47,21 +47,19 @@ function TopBar({ user }) {
   const handleAdvanceSubmit = async () => {
     if (!advanceAmount) return;
     const q = query(
-      collection(db, "entries"),
-      where("userId", "==", user.uid),
-      where("type", "==", "advance")
+      collection(db, "advanceTaken"),
+      where("userId", "==", user.uid)
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
-      await addDoc(collection(db, "entries"), {
+      await addDoc(collection(db, "advanceTaken"), {
         userId: user.uid,
         advanceTaken: parseFloat(advanceAmount),
-        type: "advance",
         createdAt: Timestamp.now(),
       });
     } else {
       const docId = snapshot.docs[0].id;
-      await updateDoc(doc(db, "entries", docId), {
+      await updateDoc(doc(db, "advanceTaken", docId), {
         advanceTaken: parseFloat(advanceAmount),
         createdAt: Timestamp.now(),
       });
@@ -73,29 +71,44 @@ function TopBar({ user }) {
   useEffect(() => {
     if (!user) return;
 
+    // Advance Taken
+    (async () => {
+      const q = query(collection(db, "advanceTaken"), where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      let advanceTaken = 0;
+      if (!snapshot.empty) {
+        advanceTaken = parseFloat(snapshot.docs[0].data().advanceTaken || 0);
+      }
+
+      setSummary((prev) => ({ ...prev, advanceTaken }));
+    })();
+
+    // Tea Entries
     const q = query(collection(db, "entries"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let totalWeight = 0,
         totalAmount = 0,
         totalPaid = 0,
         totalAdvanceCut = 0,
-        totalDue = 0,
-        advanceTaken = 0;
+        totalDue = 0;
 
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.type === "advance") {
-          advanceTaken = parseFloat(data.advanceTaken || 0);
-        } else {
-          totalWeight += parseFloat(data.weight || 0);
-          totalAmount += parseFloat(data.total || 0);
-          totalPaid += parseFloat(data.paidAmount || 0);
-          totalAdvanceCut += parseFloat(data.advanceCut || 0);
-          totalDue += parseFloat(data.due || 0);
-        }
+        totalWeight += parseFloat(data.weight || 0);
+        totalAmount += parseFloat(data.total || 0);
+        totalPaid += parseFloat(data.paidAmount || 0);
+        totalAdvanceCut += parseFloat(data.advanceCut || 0);
+        totalDue += parseFloat(data.due || 0);
       });
 
-      setSummary({ advanceTaken, totalWeight, totalAmount, totalPaid, totalAdvanceCut, totalDue });
+      setSummary((prev) => ({
+        ...prev,
+        totalWeight,
+        totalAmount,
+        totalPaid,
+        totalAdvanceCut,
+        totalDue
+      }));
     });
 
     return () => unsubscribe();
@@ -182,7 +195,7 @@ function TopBar({ user }) {
         </DialogActions>
       </Dialog>
 
-      {/* ✅ Advance Amount Dialog */}
+      {/* ✅ Advance Dialog */}
       <Dialog open={openAdvanceDialog} onClose={() => setOpenAdvanceDialog(false)}>
         <DialogTitle>Advance Taken</DialogTitle>
         <DialogContent>

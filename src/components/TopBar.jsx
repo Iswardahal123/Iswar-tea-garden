@@ -1,43 +1,24 @@
 import React, { useEffect, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Menu,
-  MenuItem,
-  Divider,
-  Box,
-  Tooltip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  TextField,
+  AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Divider,
+  Box, Tooltip, Dialog, DialogActions, DialogContent, DialogContentText,
+  DialogTitle, Button, TextField
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import AddIcon from "@mui/icons-material/Add";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
 import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-  getDocs,
-  deleteDoc,
-  doc,
-  addDoc,
+  collection, onSnapshot, query, where,
+  getDocs, deleteDoc, doc, addDoc, serverTimestamp
 } from "firebase/firestore";
 
 function TopBar({ user }) {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState("");
+  const [totalAdvance, setTotalAdvance] = useState(0);
 
   const [summary, setSummary] = useState({
     totalWeight: 0,
@@ -63,11 +44,11 @@ function TopBar({ user }) {
         deleteDoc(doc(db, "entries", docSnap.id))
       );
       await Promise.all(deletePromises);
-      setOpenDeleteDialog(false);
+      setOpenDialog(false);
       setAnchorEl(null);
     } catch (err) {
       console.error("❌ Delete failed:", err.message);
-      setOpenDeleteDialog(false);
+      setOpenDialog(false);
     }
   };
 
@@ -75,33 +56,24 @@ function TopBar({ user }) {
     const amount = parseFloat(advanceAmount);
     if (!amount || amount <= 0) return;
     try {
-      await addDoc(collection(db, "entries"), {
+      await addDoc(collection(db, "advanceTaken"), {
         userId: user.uid,
-        weight: 0,
-        total: 0,
-        paidAmount: 0,
-        due: 0,
-        advanceCut: amount,
-        createdAt: new Date(),
+        amount: amount,
+        createdAt: serverTimestamp(),
       });
       setAdvanceAmount("");
       setAdvanceDialogOpen(false);
     } catch (err) {
-      console.error("Failed to add advance:", err.message);
+      console.error("❌ Failed to add advance:", err.message);
     }
   };
 
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, "entries"), where("userId", "==", user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let totalWeight = 0,
-        totalAmount = 0,
-        totalPaid = 0,
-        totalAdvanceCut = 0,
-        totalDue = 0;
-
+    const entryQuery = query(collection(db, "entries"), where("userId", "==", user.uid));
+    const unsubEntry = onSnapshot(entryQuery, (snapshot) => {
+      let totalWeight = 0, totalAmount = 0, totalPaid = 0, totalAdvanceCut = 0, totalDue = 0;
       snapshot.forEach((doc) => {
         const data = doc.data();
         totalWeight += parseFloat(data.weight || 0);
@@ -110,11 +82,22 @@ function TopBar({ user }) {
         totalAdvanceCut += parseFloat(data.advanceCut || 0);
         totalDue += parseFloat(data.due || 0);
       });
-
       setSummary({ totalWeight, totalAmount, totalPaid, totalAdvanceCut, totalDue });
     });
 
-    return () => unsubscribe();
+    const advanceQuery = query(collection(db, "advanceTaken"), where("userId", "==", user.uid));
+    const unsubAdvance = onSnapshot(advanceQuery, (snapshot) => {
+      let total = 0;
+      snapshot.forEach((doc) => {
+        total += parseFloat(doc.data().amount || 0);
+      });
+      setTotalAdvance(total);
+    });
+
+    return () => {
+      unsubEntry();
+      unsubAdvance();
+    };
   }, [user]);
 
   return (
@@ -148,15 +131,11 @@ function TopBar({ user }) {
 
               <Divider sx={{ my: 1 }} />
 
-              <Typography
-                sx={{ px: 2, pt: 1, fontSize: "14px", fontWeight: 600, color: "limegreen" }}
-              >
-                Advance Taken So Far: ₹{summary.totalAdvanceCut}
-              </Typography>
-
               <MenuItem disabled>
-                🧺 <strong style={{ marginLeft: 8 }}>Total Tea weight:</strong>{" "}
-                {summary.totalWeight} kg
+                💵 <strong style={{ marginLeft: 8 }}>Advance Taken:</strong> ₹{totalAdvance}
+              </MenuItem>
+              <MenuItem disabled>
+                🧺 <strong style={{ marginLeft: 8 }}>Total Tea weight:</strong> {summary.totalWeight} kg
               </MenuItem>
               <MenuItem disabled>
                 💰 <strong style={{ marginLeft: 8 }}>Total Amount:</strong> ₹{summary.totalAmount}
@@ -174,14 +153,11 @@ function TopBar({ user }) {
               <Divider sx={{ my: 1 }} />
 
               <MenuItem onClick={() => setAdvanceDialogOpen(true)}>
-                <AddIcon fontSize="small" sx={{ mr: 1 }} />
-                ➕ Add Advance
+                ➕ Add Advance Taken
               </MenuItem>
-
-              <MenuItem onClick={() => setOpenDeleteDialog(true)}>
+              <MenuItem onClick={() => setOpenDialog(true)}>
                 🗑️ Delete All My Entry Data
               </MenuItem>
-
               <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
             </Menu>
           </div>
@@ -189,7 +165,7 @@ function TopBar({ user }) {
       </AppBar>
 
       {/* 🔐 Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Delete All Entry Data?</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -199,34 +175,28 @@ function TopBar({ user }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">
-            Cancel
-          </Button>
-          <Button onClick={handleDeleteAllData} color="error" variant="contained">
-            Delete
-          </Button>
+          <Button onClick={() => setOpenDialog(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleDeleteAllData} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
 
       {/* ➕ Add Advance Dialog */}
       <Dialog open={advanceDialogOpen} onClose={() => setAdvanceDialogOpen(false)}>
-        <DialogTitle>Add Advance Amount</DialogTitle>
+        <DialogTitle>Add Advance Taken</DialogTitle>
         <DialogContent>
           <TextField
-            label="Enter Amount (₹)"
+            autoFocus
+            margin="dense"
+            label="Enter Amount"
             type="number"
             fullWidth
-            variant="outlined"
-            margin="dense"
             value={advanceAmount}
             onChange={(e) => setAdvanceAmount(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAdvanceDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleAddAdvance} variant="contained" color="success">
-            Submit
-          </Button>
+          <Button variant="contained" onClick={handleAddAdvance}>Submit</Button>
         </DialogActions>
       </Dialog>
     </>

@@ -35,7 +35,7 @@ const Loader = () => (
   }}>
     <CircularProgress size={50} thickness={4} />
     <p style={{ marginTop: "10px", fontWeight: "bold", color: "#555" }}>
-      Authenticating...
+      Loading...
     </p>
   </div>
 );

@@ -83,6 +83,10 @@ return ( <> <AppBar position="static" color="primary"> <Toolbar sx={{ justifyCon
           <Divider sx={{ my: 1 }} />
 
           <MenuItem disabled>
+
+            <MenuItem disabled>
+            🪙 <strong style={{ marginLeft: 8 }}>Advance Taken:</strong> ₹{summary.advanceTaken}
+          </MenuItem>
             🧺 <strong style={{ marginLeft: 8 }}>Total Tea weight:</strong> {summary.totalWeight} kg
           </MenuItem>
           <MenuItem disabled>
@@ -97,9 +101,7 @@ return ( <> <AppBar position="static" color="primary"> <Toolbar sx={{ justifyCon
           <MenuItem disabled>
             ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
           </MenuItem>
-          <MenuItem disabled>
-            🪙 <strong style={{ marginLeft: 8 }}>Advance Taken:</strong> ₹{summary.advanceTaken}
-          </MenuItem>
+          
 
           <Divider sx={{ my: 1 }} />
 

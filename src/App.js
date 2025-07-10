@@ -1,4 +1,4 @@
-// ✅ App.js (Fully Fixed)
+// ✅ App.js (With Professional Loader on Refresh)
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -21,8 +21,23 @@ import AdminEntriesPage from "./pages/admin/AdminEntries";
 import AdminUsersPage from "./pages/admin/AdminUsers";
 import AdminSettingsPage from "./pages/admin/AdminSettings";
 
+// Simple Loader Component
+const Loader = () => (
+  <div style={{
+    display: "flex",
+    height: "100vh",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "20px",
+    fontWeight: "bold",
+  }}>
+    🔄 Loading...
+  </div>
+);
+
 function AppWrapper() {
   const [user, setUser] = useState(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
 
   const onLogin = async () => {
@@ -40,11 +55,16 @@ function AppWrapper() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setCheckingAuth(false);
     });
     return () => unsubscribe();
   }, []);
 
   const isAdminPath = window.location.pathname.startsWith("/admin");
+
+  if (checkingAuth) {
+    return <Loader />;
+  }
 
   if (!user) {
     return <Login onLogin={onLogin} />;

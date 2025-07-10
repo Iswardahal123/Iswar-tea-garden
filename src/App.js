@@ -1,4 +1,4 @@
-// ✅ App.js (With Professional Loader on Refresh)
+// ✅ App.js (Animated Loading Spinner with Material UI)
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Login from "./components/Login";
@@ -21,17 +21,22 @@ import AdminEntriesPage from "./pages/admin/AdminEntries";
 import AdminUsersPage from "./pages/admin/AdminUsers";
 import AdminSettingsPage from "./pages/admin/AdminSettings";
 
-// Simple Loader Component
+// 🌀 Material UI Circular Loader
+import { CircularProgress } from "@mui/material";
+
 const Loader = () => (
   <div style={{
     display: "flex",
     height: "100vh",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "20px",
-    fontWeight: "bold",
+    flexDirection: "column",
+    backgroundColor: "#f5f5f5"
   }}>
-    🔄 Loading...
+    <CircularProgress size={50} thickness={4} />
+    <p style={{ marginTop: "10px", fontWeight: "bold", color: "#555" }}>
+      Authenticating...
+    </p>
   </div>
 );
 

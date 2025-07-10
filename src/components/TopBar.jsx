@@ -9,8 +9,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/config";
 import {
-  collection, onSnapshot, query, where,
-  getDocs, deleteDoc, doc, addDoc, serverTimestamp
+  collection, onSnapshot, query, where, getDocs,
+  deleteDoc, doc, addDoc, serverTimestamp, updateDoc
 } from "firebase/firestore";
 
 function TopBar({ user }) {
@@ -18,7 +18,7 @@ function TopBar({ user }) {
   const [openDialog, setOpenDialog] = useState(false);
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState("");
-  const [totalAdvance, setTotalAdvance] = useState(0);
+  const [advanceTaken, setAdvanceTaken] = useState(0);
 
   const [summary, setSummary] = useState({
     totalWeight: 0,
@@ -28,13 +28,22 @@ function TopBar({ user }) {
     totalDue: 0,
   });
 
-  const handleMenu = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   const handleLogout = () => {
     signOut(auth);
     handleClose();
   };
-  const handleCopy = () => navigator.clipboard.writeText(user?.uid || "");
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(user?.uid || "");
+  };
 
   const handleDeleteAllData = async () => {
     try {
@@ -55,25 +64,43 @@ function TopBar({ user }) {
   const handleAddAdvance = async () => {
     const amount = parseFloat(advanceAmount);
     if (!amount || amount <= 0) return;
+
     try {
-      await addDoc(collection(db, "advanceTaken"), {
-        userId: user.uid,
-        amount: amount,
-        createdAt: serverTimestamp(),
-      });
+      const q = query(collection(db, "advanceTaken"), where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        const docId = snapshot.docs[0].id;
+        await updateDoc(doc(db, "advanceTaken", docId), {
+          amount: amount,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, "advanceTaken"), {
+          userId: user.uid,
+          amount: amount,
+          createdAt: serverTimestamp(),
+        });
+      }
+
       setAdvanceAmount("");
       setAdvanceDialogOpen(false);
     } catch (err) {
-      console.error("❌ Failed to add advance:", err.message);
+      console.error("❌ Failed to set advance:", err.message);
     }
   };
 
   useEffect(() => {
     if (!user) return;
 
-    const entryQuery = query(collection(db, "entries"), where("userId", "==", user.uid));
-    const unsubEntry = onSnapshot(entryQuery, (snapshot) => {
-      let totalWeight = 0, totalAmount = 0, totalPaid = 0, totalAdvanceCut = 0, totalDue = 0;
+    const q = query(collection(db, "entries"), where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let totalWeight = 0,
+        totalAmount = 0,
+        totalPaid = 0,
+        totalAdvanceCut = 0,
+        totalDue = 0;
+
       snapshot.forEach((doc) => {
         const data = doc.data();
         totalWeight += parseFloat(data.weight || 0);
@@ -82,22 +109,24 @@ function TopBar({ user }) {
         totalAdvanceCut += parseFloat(data.advanceCut || 0);
         totalDue += parseFloat(data.due || 0);
       });
+
       setSummary({ totalWeight, totalAmount, totalPaid, totalAdvanceCut, totalDue });
     });
 
-    const advanceQuery = query(collection(db, "advanceTaken"), where("userId", "==", user.uid));
-    const unsubAdvance = onSnapshot(advanceQuery, (snapshot) => {
-      let total = 0;
-      snapshot.forEach((doc) => {
-        total += parseFloat(doc.data().amount || 0);
-      });
-      setTotalAdvance(total);
-    });
-
-    return () => {
-      unsubEntry();
-      unsubAdvance();
+    // Fetch advanceTaken
+    const getAdvance = async () => {
+      const q = query(collection(db, "advanceTaken"), where("userId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const data = snapshot.docs[0].data();
+        setAdvanceTaken(data.amount || 0);
+      } else {
+        setAdvanceTaken(0);
+      }
     };
+
+    getAdvance();
+    return () => unsubscribe();
   }, [user]);
 
   return (
@@ -132,9 +161,6 @@ function TopBar({ user }) {
               <Divider sx={{ my: 1 }} />
 
               <MenuItem disabled>
-                💵 <strong style={{ marginLeft: 8 }}>Advance Taken:</strong> ₹{totalAdvance}
-              </MenuItem>
-              <MenuItem disabled>
                 🧺 <strong style={{ marginLeft: 8 }}>Total Tea weight:</strong> {summary.totalWeight} kg
               </MenuItem>
               <MenuItem disabled>
@@ -149,15 +175,20 @@ function TopBar({ user }) {
               <MenuItem disabled>
                 ❗ <strong style={{ marginLeft: 8 }}>Balance amount:</strong> ₹{summary.totalDue}
               </MenuItem>
+              <MenuItem disabled>
+                💼 <strong style={{ marginLeft: 8 }}>Advance Taken:</strong> ₹{advanceTaken}
+              </MenuItem>
 
               <Divider sx={{ my: 1 }} />
 
               <MenuItem onClick={() => setAdvanceDialogOpen(true)}>
-                ➕ Add Advance Taken
+                ➕ Add / Update Advance Taken
               </MenuItem>
+
               <MenuItem onClick={() => setOpenDialog(true)}>
                 🗑️ Delete All My Entry Data
               </MenuItem>
+
               <MenuItem onClick={handleLogout}>🚪 Logout</MenuItem>
             </Menu>
           </div>
@@ -180,23 +211,23 @@ function TopBar({ user }) {
         </DialogActions>
       </Dialog>
 
-      {/* ➕ Add Advance Dialog */}
+      {/* 💼 Advance Entry Dialog */}
       <Dialog open={advanceDialogOpen} onClose={() => setAdvanceDialogOpen(false)}>
-        <DialogTitle>Add Advance Taken</DialogTitle>
+        <DialogTitle>Set Advance Taken</DialogTitle>
         <DialogContent>
           <TextField
-            autoFocus
-            margin="dense"
-            label="Enter Amount"
+            label="Advance Amount (₹)"
             type="number"
             fullWidth
             value={advanceAmount}
             onChange={(e) => setAdvanceAmount(e.target.value)}
+            autoFocus
+            sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAdvanceDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleAddAdvance}>Submit</Button>
+          <Button onClick={() => setAdvanceDialogOpen(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleAddAdvance} color="primary" variant="contained">Submit</Button>
         </DialogActions>
       </Dialog>
     </>
